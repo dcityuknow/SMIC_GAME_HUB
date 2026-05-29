@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penalty Shootout – SMIC GAME</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/penalty.css">
+</head>
+<body>
+<div class="game-wrap" id="gameWrap">
+
+    <!-- NÚT LOBBY -->
+    <button class="lobby-btn" onclick="goLobby()">🏠 LOBBY</button>
+
+    <!-- ============ MÀN CHỌN CHẾ ĐỘ ============ -->
+    <div class="screen" id="screenMode">
+        <h1 class="big-title">PENALTY<br><span>SHOOTOUT</span></h1>
+        <p class="sub">Choose your role — 5 rounds each side</p>
+        <div class="mode-cards">
+            <div class="mode-card card-shoot" onclick="startGame('shooter')">
+                <div class="mode-icon">🦵</div>
+                <h2>SHOOTER</h2>
+                <p>You shoot, Bot saves<br>Pick your corner!</p>
+            </div>
+            <div class="mode-card card-keep" onclick="startGame('keeper')">
+                <div class="mode-icon">🧤</div>
+                <h2>GOALKEEPER</h2>
+                <p>You dive, Bot shoots<br>React in time!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MÀN CHƠI ============ -->
+    <div class="screen hidden" id="screenGame">
+
+        <!-- SCOREBOARD -->
+        <div class="scoreboard">
+            <div class="score-block" id="sbPlayer">
+                <span class="sb-label" id="playerLabel">YOU</span>
+                <span class="sb-score" id="playerScore">0</span>
+                <div class="sb-dots" id="playerDots"></div>
+            </div>
+            <div class="sb-round" id="sbRound">ROUND 1/5</div>
+            <div class="score-block" id="sbBot">
+                <span class="sb-label">BOT</span>
+                <span class="sb-score" id="botScore">0</span>
+                <div class="sb-dots" id="botDots"></div>
+            </div>
+        </div>
+
+        <!-- FIELD -->
+        <div class="field" id="field">
+            <!-- Sky -->
+            <div class="sky"></div>
+
+            <!-- Goal net -->
+            <div class="goal-wrap">
+                <div class="goal-net" id="goalNet">
+                    <!-- 9 zones (3x3) -->
+                    <div class="zones" id="zones">
+                        <div class="zone" data-zone="0"></div>
+                        <div class="zone" data-zone="1"></div>
+                        <div class="zone" data-zone="2"></div>
+                        <div class="zone" data-zone="3"></div>
+                        <div class="zone" data-zone="4"></div>
+                        <div class="zone" data-zone="5"></div>
+                        <div class="zone" data-zone="6"></div>
+                        <div class="zone" data-zone="7"></div>
+                        <div class="zone" data-zone="8"></div>
+                    </div>
+                    <!-- Goalkeeper -->
+                    <div class="keeper" id="keeper">🧤</div>
+                </div>
+            </div>
+
+            <!-- Grass -->
+            <div class="grass-area">
+                <div class="center-line"></div>
+                <div class="penalty-spot"></div>
+                <div class="penalty-arc"></div>
+            </div>
+
+            <!-- Ball -->
+            <div class="ball" id="ball">⚽</div>
+
+            <!-- Shooter on field -->
+            <div class="shooter-sprite" id="shooterSprite">🧑</div>
+        </div>
+
+        <!-- ACTION PANEL -->
+        <div class="action-panel" id="actionPanel">
+            <p class="action-hint" id="actionHint">Click a zone to shoot!</p>
+            <!-- Zone buttons (shooter mode) -->
+            <div class="shot-grid" id="shotGrid">
+                <button class="shot-btn" data-zone="0">↖</button>
+                <button class="shot-btn" data-zone="1">↑</button>
+                <button class="shot-btn" data-zone="2">↗</button>
+                <button class="shot-btn" data-zone="3">←</button>
+                <button class="shot-btn" data-zone="4">⬛</button>
+                <button class="shot-btn" data-zone="5">→</button>
+                <button class="shot-btn" data-zone="6">↙</button>
+                <button class="shot-btn" data-zone="7">↓</button>
+                <button class="shot-btn" data-zone="8">↘</button>
+            </div>
+        </div>
+
+        <!-- RESULT FLASH -->
+        <div class="result-flash hidden" id="resultFlash"></div>
+    </div>
+
+    <!-- ============ MÀN KẾT QUẢ ============ -->
+    <div class="screen hidden" id="screenResult">
+        <div class="result-card">
+            <div class="result-trophy" id="resultTrophy">🏆</div>
+            <h2 class="result-title" id="resultTitle">YOU WIN!</h2>
+            <p class="result-sub" id="resultSub">5 – 3</p>
+            <div class="result-btns">
+                <button class="rbtn rbtn-play" onclick="rematch()">Play Again</button>
+                <button class="rbtn rbtn-menu" onclick="goMode()">Change Mode</button>
+                <button class="rbtn rbtn-lobby" onclick="goLobby()">🏠 Lobby</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="js/penalty.js"></script>
+</body>
+</html>
