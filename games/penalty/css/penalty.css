@@ -53,7 +53,6 @@ body {
 ════════════════════════════════════════ */
 #screenMode { justify-content: center; }
 
-/* Background.png phủ toàn màn hình mode select */
 .mode-bg {
     position: absolute; inset: 0;
     background-image: url('../../assets/images/penalty/background.png');
@@ -61,14 +60,12 @@ body {
     background-position: center center;
     z-index: 0;
 }
-/* Fallback gradient nếu ảnh không load */
 .mode-bg::before {
     content: '';
     position: absolute; inset: 0;
     background: radial-gradient(ellipse 90% 70% at 50% 100%, #0d4a1a 0%, #06111e 55%);
     z-index: -1;
 }
-/* Overlay tối để text dễ đọc */
 .mode-overlay {
     position: absolute; inset: 0;
     background: linear-gradient(180deg,
@@ -143,24 +140,19 @@ body {
 
 /* ════════════════════════════════════════
    STADIUM
-   Background1.png = sân cỏ + khán đài
 ════════════════════════════════════════ */
 .stadium {
     position: relative;
     width: 100%;
     flex: 1;
     overflow: hidden;
-
-    /* Background1.png làm ảnh nền toàn sân */
     background-image: url('../../assets/images/penalty/Background1.png');
     background-size: cover;
     background-position: center 25%;
     background-repeat: no-repeat;
-    /* Màu fallback khi ảnh chưa load */
     background-color: #1a5c28;
 }
 
-/* Fallback gradient + crowd (chỉ thấy nếu Background1.png lỗi) */
 .stadium-bg-fallback {
     position: absolute; inset: 0;
     background: linear-gradient(180deg, #0b1c35 0%, #1f5a28 45%, #2a7a35 100%);
@@ -189,7 +181,7 @@ body {
 }
 
 /* ════════════════════════════════════════
-   GOAL — goal.png làm khung thành
+   GOAL
 ════════════════════════════════════════ */
 .goal-wrap {
     position: absolute;
@@ -199,9 +191,9 @@ body {
     max-width: 666px;
     height: 50%;
     z-index: 3;
+    overflow: visible;
 }
 
-/* goal.png phủ toàn bộ goal-wrap */
 .goal-img {
     position: absolute; inset: 0;
     width: 100%; height: 100%;
@@ -240,16 +232,11 @@ body {
 
 /* ════════════════════════════════════════
    GOAL NET — vùng click 9 zone
-   Điều chỉnh inset để khớp chính xác với
-   vùng lưới bên trong goal.png
 ════════════════════════════════════════ */
 .goal-net {
     position: absolute;
-    /* top = chiều cao xà ngang trong ảnh (~14% chiều cao goal.png)
-       left/right = chiều rộng cột dọc (~9%)
-       bottom = phần khung dưới cột (~0%) */
     top: 14%; left: 9%; right: 9%; bottom: 0;
-    z-index: 4; overflow: hidden;
+    z-index: 4; overflow: visible;
     background:
         repeating-linear-gradient(0deg,   rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 16px),
         repeating-linear-gradient(90deg,  rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, transparent 1px, transparent 16px);
@@ -269,7 +256,6 @@ body {
     transition: background 0.1s, border-color 0.1s;
     position: relative;
 }
-/* Hover: glow vàng nhẹ để user thấy vùng có thể click */
 .zone:hover {
     background: rgba(255,215,0,0.16);
     border-color: rgba(255,215,0,0.55);
@@ -286,7 +272,7 @@ body {
 .zone.scored  { background: rgba(74,222,128,0.36);   border-color: rgba(74,222,128,0.9); }
 
 /* ════════════════════════════════════════
-   KEEPER — 3 pose ảnh
+   KEEPER — 9 pose ảnh
 ════════════════════════════════════════ */
 .keeper {
     position: absolute;
@@ -299,7 +285,20 @@ body {
     display: flex; align-items: flex-end; justify-content: center;
     transition: left 0.22s cubic-bezier(.34,1.56,.64,1),
                 bottom 0.18s ease-out;
+    animation: keeperSway 1.8s ease-in-out infinite;
 }
+.keeper.diving {
+    animation: none;
+}
+
+@keyframes keeperSway {
+    0%   { transform: translateX(-50%) rotate(-1.5deg) scaleX(1); }
+    25%  { transform: translateX(calc(-50% + 4px)) rotate(0deg) scaleX(1.02); }
+    50%  { transform: translateX(-50%) rotate(1.5deg) scaleX(1); }
+    75%  { transform: translateX(calc(-50% - 4px)) rotate(0deg) scaleX(1.02); }
+    100% { transform: translateX(-50%) rotate(-1.5deg) scaleX(1); }
+}
+
 .keeper-img {
     position: absolute; bottom: 0; left: 0;
     width: 100%; height: 100%;
@@ -310,9 +309,15 @@ body {
 }
 .keeper-img.active { opacity: 1; }
 
-/* Khi đổ người — to hơn, hạ xuống sát sân */
+/* Khi đổ người trái/phải — nằm ngang, rộng hơn */
 .keeper.dive-left  { width: 400px; height: 300px; }
 .keeper.dive-right { width: 400px; height: 300px; }
+
+/* Khi nhảy lên — cao hơn */
+.keeper.dive-up    { width: 250px; height: 560px; }
+
+/* Khi cúi xuống — thấp hơn */
+.keeper.dive-down  { width: 300px; height: 260px; }
 
 .keeper.keeper-emoji::after { content: '🧤'; font-size: 2.2rem; }
 
@@ -344,6 +349,25 @@ body {
 }
 .shooter-sprite img { width: 100%; height: 100%; object-fit: contain; object-position: bottom; }
 .shooter-sprite.shooter-emoji::after { content: '🧑'; font-size: 5rem; display: block; }
+
+.shooter-sprite.runup {
+    animation: shooterRunup 0.38s cubic-bezier(.4,0,.6,1) forwards;
+}
+@keyframes shooterRunup {
+    0%   { transform: translateX(-52%) translateY(0px) rotate(0deg); }
+    40%  { transform: translateX(calc(-52% + 22px)) translateY(-8px) rotate(-4deg); }
+    70%  { transform: translateX(calc(-52% + 38px)) translateY(-4px) rotate(-8deg); }
+    85%  { transform: translateX(calc(-52% + 50px)) translateY(0px) rotate(-12deg); }
+    100% { transform: translateX(calc(-52% + 44px)) translateY(2px) rotate(-6deg); }
+}
+.shooter-sprite.kicking {
+    animation: shooterKick 0.25s cubic-bezier(.2,1.5,.6,1) forwards;
+}
+@keyframes shooterKick {
+    0%   { transform: translateX(calc(-52% + 44px)) translateY(2px)  rotate(-6deg); }
+    40%  { transform: translateX(calc(-52% + 56px)) translateY(-14px) rotate(-18deg) scaleX(1.06); }
+    100% { transform: translateX(calc(-52% + 40px)) translateY(0px)   rotate(-4deg); }
+}
 
 /* ── RESULT FLASH ── */
 .result-flash {
