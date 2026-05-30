@@ -45,10 +45,13 @@
     │   │
     │   ├── penalty/                
     │   │   ├── background.png
-    │   │   ├── goalkeeper.png
-    │   │   ├── shooter.png
+    │   │   ├── background1.png
     │   │   ├── ball.png
-    │   │   ├── ketqua.png
+    │   │   ├── goal.png
+    │   │   ├── goalkeeper.png
+    │   │   ├── goalkeeper-left.png
+    │   │   ├── goalkeeper-right.png
+    │   │   ├── shooter.png
     │
     └── sounds/
         ├── tugofwar/                 ← Âm thanh kéo co
