@@ -15,7 +15,9 @@
 
     <!-- ============ MODE SELECT ============ -->
     <div class="screen" id="screenMode">
-        <div class="mode-bg"></div>
+        <div class="mode-bg">
+            <img src="../../assets/images/penalty/Background.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
+        </div>
         <div class="mode-overlay"></div>
         <div class="title-block">
             <div class="title-league">SMIC GAME HUB</div>
@@ -64,11 +66,8 @@
         <!-- STADIUM — Background1.png làm nền toàn sân -->
         <div class="stadium" id="field">
 
-            <!-- Fallback sky/crowd nếu Background1.png không load -->
-            <div class="stadium-bg-fallback">
-                <div class="crowd-layer crowd-back"></div>
-                <div class="crowd-layer crowd-front"></div>
-            </div>
+            <!-- Background1.png dùng img tag giống goal.png -->
+            <img src="../../assets/images/penalty/Background1.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;">
 
             <!-- GOAL — goal.png + zones tương tác -->
             <div class="goal-wrap" id="goalWrap">
