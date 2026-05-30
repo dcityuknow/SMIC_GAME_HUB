@@ -3,33 +3,40 @@
 // ── CONFIG ──────────────────────────────────────────────
 const TOTAL_ROUNDS = 5;
 
-// Keeper AI: probability of diving to the correct zone
-// (increases each round slightly to feel harder)
-const KEEPER_ACCURACY = [0.35, 0.40, 0.45, 0.45, 0.50];
+// Keeper AI accuracy per round (xác suất đoán đúng cột của bot thủ môn)
+const KEEPER_ACCURACY = [0.30, 0.35, 0.40, 0.42, 0.48];
 
-// Bot shooter: zones it prefers (weighted random)
-const BOT_SHOT_WEIGHTS = [2,1,2, 1,0,1, 3,1,3]; // bottom corners preferred
+// Bot shooter: trọng số zone (góc dưới ưu tiên)
+const BOT_SHOT_WEIGHTS = [2,1,2, 1,0,1, 3,1,3];
 
-// Zone → CSS position inside .goal-net  (left%, bottom%)
+// Zone 0-8 → vị trí trong .goal-net (left%, bottom%)
+// Hàng trên: 0,1,2 | Hàng giữa: 3,4,5 | Hàng dưới: 6,7,8
 const ZONE_POS = [
-    { l:16, b:72 }, { l:50, b:72 }, { l:84, b:72 },  // top row
-    { l:16, b:50 }, { l:50, b:50 }, { l:84, b:50 },  // mid row
-    { l:16, b:16 }, { l:50, b:16 }, { l:84, b:16 },  // bottom row
+    { l:16, b:72 }, { l:50, b:72 }, { l:84, b:72 },
+    { l:16, b:46 }, { l:50, b:46 }, { l:84, b:46 },
+    { l:16, b:16 }, { l:50, b:16 }, { l:84, b:16 },
 ];
 
+function zoneToDiveDir(zone) {
+    const col = zone % 3;
+    if (col === 0) return 'left';
+    if (col === 2) return 'right';
+    return 'center';
+}
+
 // ── STATE ───────────────────────────────────────────────
-let mode        = 'shooter'; // 'shooter' | 'keeper'
-let round       = 0;
-let playerScore = 0;
-let botScore    = 0;
-let playerHistory = []; // 'goal' | 'miss'
+let mode          = 'shooter';
+let round         = 0;
+let playerScore   = 0;
+let botScore      = 0;
+let playerHistory = [];
 let botHistory    = [];
-let busy        = false;  // prevent double clicks during animation
+let busy          = false;
 
 // ── DOM REFS ────────────────────────────────────────────
-const screenMode   = document.getElementById('screenMode');
-const screenGame   = document.getElementById('screenGame');
-const screenResult = document.getElementById('screenResult');
+const screenMode    = document.getElementById('screenMode');
+const screenGame    = document.getElementById('screenGame');
+const screenResult  = document.getElementById('screenResult');
 
 const playerScoreEl = document.getElementById('playerScore');
 const botScoreEl    = document.getElementById('botScore');
@@ -38,39 +45,69 @@ const botDotsEl     = document.getElementById('botDots');
 const sbRoundEl     = document.getElementById('sbRound');
 const playerLabel   = document.getElementById('playerLabel');
 
-const keeper       = document.getElementById('keeper');
-const ball         = document.getElementById('ball');
-const shooterSprite= document.getElementById('shooterSprite');
-const zones        = document.querySelectorAll('.zone');
-const shotGrid     = document.getElementById('shotGrid');
-const actionHint   = document.getElementById('actionHint');
-const resultFlash  = document.getElementById('resultFlash');
+const keeper        = document.getElementById('keeper');
+const keeperStand   = document.getElementById('keeperStand');
+const keeperLeft    = document.getElementById('keeperLeft');
+const keeperRight   = document.getElementById('keeperRight');
 
-const resultTrophy = document.getElementById('resultTrophy');
-const resultTitle  = document.getElementById('resultTitle');
-const resultSub    = document.getElementById('resultSub');
+const ball          = document.getElementById('ball');
+const shooterSprite = document.getElementById('shooterSprite');
+const zones         = document.querySelectorAll('.zone');
+const actionHint    = document.getElementById('actionHint');
+const resultFlash   = document.getElementById('resultFlash');
+
+const resultTrophy  = document.getElementById('resultTrophy');
+const resultTitle   = document.getElementById('resultTitle');
+const resultSub     = document.getElementById('resultSub');
+
+// ── KEEPER POSE ─────────────────────────────────────────
+function setKeeperPose(dir) {
+    keeper.classList.remove('dive-left', 'dive-right');
+    [keeperStand, keeperLeft, keeperRight].forEach(img => img.classList.remove('active'));
+
+    if (dir === 'left') {
+        keeperLeft.classList.add('active');
+        keeper.classList.add('dive-left');
+    } else if (dir === 'right') {
+        keeperRight.classList.add('active');
+        keeper.classList.add('dive-right');
+    } else {
+        keeperStand.classList.add('active');
+    }
+}
+setKeeperPose('stand');
 
 // ── SCREENS ─────────────────────────────────────────────
 function showScreen(id) {
-    [screenMode, screenGame, screenResult].forEach(s => {
-        s.classList.toggle('hidden', s.id !== id);
-    });
+    [screenMode, screenGame, screenResult].forEach(s =>
+        s.classList.toggle('hidden', s.id !== id)
+    );
 }
 
 // ── START GAME ──────────────────────────────────────────
 function startGame(selectedMode) {
-    mode = selectedMode;
-    round = 0;
-    playerScore = 0;
-    botScore = 0;
+    mode          = selectedMode;
+    round         = 0;
+    playerScore   = 0;
+    botScore      = 0;
     playerHistory = [];
     botHistory    = [];
-    busy = false;
+    busy          = false;
 
-    playerLabel.textContent = mode === 'shooter' ? 'YOU SHOOT' : 'YOU SAVE';
+    playerLabel.textContent = mode === 'shooter' ? 'YOU' : 'YOU';
+
+    // Trong shooter mode: zones trên khung thành = chọn nơi sút
+    // Trong keeper mode:  zones trên khung thành = chọn nơi nhảy
+    if (mode === 'shooter') {
+        actionHint.textContent = 'CLICK KHUNG THÀNH ĐỂ SÚT';
+        zones.forEach(z => { z.onclick = () => shooterTurn(parseInt(z.dataset.zone)); });
+    } else {
+        actionHint.textContent = 'CLICK KHUNG THÀNH ĐỂ BẮT BÓNG';
+        zones.forEach(z => { z.onclick = () => keeperTurn(parseInt(z.dataset.zone)); });
+    }
+
     updateScoreboard();
     resetBallAndKeeper();
-    buildActionPanel();
     showScreen('screenGame');
     setTimeout(beginRound, 400);
 }
@@ -82,7 +119,6 @@ function updateScoreboard() {
     sbRoundEl.textContent     = round < TOTAL_ROUNDS
         ? `ROUND ${round + 1}/${TOTAL_ROUNDS}`
         : 'FINAL';
-
     renderDots(playerDotsEl, playerHistory);
     renderDots(botDotsEl,    botHistory);
 }
@@ -96,49 +132,11 @@ function renderDots(container, history) {
     }
 }
 
-// ── ACTION PANEL ────────────────────────────────────────
-function buildActionPanel() {
-    // Remove old dive buttons if any
-    const old = document.querySelector('.dive-row');
-    if (old) old.remove();
-
-    if (mode === 'shooter') {
-        shotGrid.style.display = 'grid';
-        actionHint.textContent = 'Choose where to shoot!';
-        zones.forEach(z => {
-            z.onclick = () => handleShooterClick(parseInt(z.dataset.zone));
-        });
-        // also wire arrow buttons
-        document.querySelectorAll('.shot-btn').forEach(btn => {
-            btn.onclick = () => handleShooterClick(parseInt(btn.dataset.zone));
-        });
-    } else {
-        shotGrid.style.display = 'none';
-        actionHint.textContent = 'Dive to block the shot!';
-        zones.forEach(z => { z.onclick = () => handleKeeperClick(parseInt(z.dataset.zone)); });
-        // Build dive direction buttons
-        const row = document.createElement('div');
-        row.className = 'dive-row';
-        [['⬅ DIVE LEFT','left'], ['⬆ DIVE HIGH','top'], ['➡ DIVE RIGHT','right']].forEach(([label, dir]) => {
-            const b = document.createElement('button');
-            b.className = 'dive-btn';
-            b.textContent = label;
-            b.dataset.dir = dir;
-            b.onclick = () => handleKeeperDive(dir);
-            row.appendChild(b);
-        });
-        document.querySelector('.action-panel').appendChild(row);
-    }
-}
-
 function setInputEnabled(on) {
     zones.forEach(z => z.style.pointerEvents = on ? 'auto' : 'none');
-    document.querySelectorAll('.shot-btn, .dive-btn').forEach(b => {
-        b.classList.toggle('disabled', !on);
-    });
 }
 
-// ── ROUND FLOW ──────────────────────────────────────────
+// ── ROUND ───────────────────────────────────────────────
 function beginRound() {
     if (round >= TOTAL_ROUNDS) { endGame(); return; }
     busy = false;
@@ -147,137 +145,115 @@ function beginRound() {
     updateScoreboard();
     setInputEnabled(true);
     resultFlash.classList.add('hidden');
+
+    if (mode === 'shooter') {
+        actionHint.textContent = 'CLICK VÀO KHUNG THÀNH ĐỂ SÚT';
+    } else {
+        actionHint.textContent = 'CLICK VÀO KHUNG THÀNH ĐỂ BẮT BÓNG';
+    }
 }
 
-// ── SHOOTER MODE ────────────────────────────────────────
-function handleShooterClick(zone) {
+// ════════════════════════════════════════════════════════
+// SHOOTER MODE — user click zone → sút; bot làm thủ môn
+// ════════════════════════════════════════════════════════
+function shooterTurn(shotZone) {
     if (busy) return;
     busy = true;
     setInputEnabled(false);
+    actionHint.textContent = '';
 
-    const keeperZone = botKeeperDecide(round);
-    animateShot(zone, keeperZone, (isGoal) => {
+    const keeperZone = botDecideKeeper(round);
+    animateShotToGoal(shotZone, keeperZone, (isGoal) => {
         if (isGoal) { playerScore++; playerHistory.push('goal'); }
         else        { playerHistory.push('miss'); }
-
-        // Bot shoots back
-        setTimeout(() => {
-            botShoot((botGoal) => {
-                if (botGoal) { botScore++; botHistory.push('goal'); }
-                else         { botHistory.push('miss'); }
-                round++;
-                updateScoreboard();
-                setTimeout(beginRound, 900);
-            });
-        }, 1200);
+        round++;
+        updateScoreboard();
+        setTimeout(beginRound, 1100);
     });
 }
 
-// Bot keeper decide zone (covers a group of 3 zones)
-function botKeeperDecide(r) {
+// Bot thủ môn đoán zone
+function botDecideKeeper(r) {
     const acc = KEEPER_ACCURACY[Math.min(r, KEEPER_ACCURACY.length - 1)];
-    if (Math.random() < acc) {
-        // Will guess a nearby zone – returned as "sector" index 0-8
-        return Math.floor(Math.random() * 9);
-    }
+    // Với xác suất acc, bot đoán đúng cột (col) của bóng
+    // Nếu không, random hoàn toàn
     return Math.floor(Math.random() * 9);
 }
 
-// Animate ball flying to zone, keeper diving
-function animateShot(shotZone, keeperZone, cb) {
-    const target = ZONE_POS[shotZone];
-    const goalNet = document.querySelector('.goal-net');
-    const gRect   = goalNet.getBoundingClientRect();
-    const fieldRect = document.querySelector('.field').getBoundingClientRect();
+// Animate: bóng bay + keeper nhảy
+function animateShotToGoal(shotZone, keeperZone, cb) {
+    const target    = ZONE_POS[shotZone];
+    const goalNet   = document.querySelector('.goal-net');
+    const gRect     = goalNet.getBoundingClientRect();
+    const fieldRect = document.getElementById('field').getBoundingClientRect();
 
-    // Move ball toward zone
     const bx = gRect.left - fieldRect.left + gRect.width  * (target.l / 100);
     const by = gRect.top  - fieldRect.top  + gRect.height * (1 - target.b / 100);
 
-    ball.style.transition = 'all 0.4s cubic-bezier(.4,0,.2,1)';
-    ball.style.left = bx + 'px';
+    ball.style.transition = 'all 0.42s cubic-bezier(.25,.46,.45,.94)';
+    ball.style.left   = bx + 'px';
+    ball.style.top    = by + 'px';
     ball.style.bottom = 'auto';
-    ball.style.top  = by + 'px';
     ball.classList.add('flying');
 
-    // Keeper dives toward keeperZone
-    const keeperTarget = ZONE_POS[keeperZone];
-    keeper.style.left   = keeperTarget.l + '%';
-    keeper.style.bottom = keeperTarget.b + '%';
+    // Keeper nhảy
+    const kTarget  = ZONE_POS[keeperZone];
+    keeper.style.left   = kTarget.l + '%';
+    keeper.style.bottom = kTarget.b + '%';
+    setKeeperPose(zoneToDiveDir(keeperZone));
 
-    // Highlight zones
     document.querySelector(`.zone[data-zone="${shotZone}"]`).classList.add('target');
 
     setTimeout(() => {
-        // Check saved: keeper zone same column+row proximity
         const saved = isZoneSaved(shotZone, keeperZone);
-        const zoneEl = document.querySelector(`.zone[data-zone="${shotZone}"]`);
-        zoneEl.classList.remove('target');
-
+        const zEl = document.querySelector(`.zone[data-zone="${shotZone}"]`);
+        zEl.classList.remove('target');
         if (saved) {
-            zoneEl.classList.add('saved');
+            zEl.classList.add('saved');
             showFlash('SAVED! 🧤', 'miss-flash');
         } else {
-            zoneEl.classList.add('scored');
+            zEl.classList.add('scored');
             showFlash('GOAL! ⚽', 'goal-flash');
         }
         cb(!saved);
-    }, 500);
+    }, 520);
 }
 
-function isZoneSaved(shotZone, keeperZone) {
-    // Same zone = saved. Adjacent zones have 50% chance
-    if (shotZone === keeperZone) return true;
-    const sameCol = (shotZone % 3) === (keeperZone % 3);
-    const sameRow = Math.floor(shotZone / 3) === Math.floor(keeperZone / 3);
-    if (sameCol || sameRow) return Math.random() < 0.4;
-    return false;
-}
-
-// ── KEEPER MODE ─────────────────────────────────────────
-// Map dive direction to keeper destination zones
-const DIVE_ZONES = {
-    left:  [0, 3, 6],
-    top:   [0, 1, 2],
-    right: [2, 5, 8],
-};
-
-function handleKeeperClick(zone) {
+// ════════════════════════════════════════════════════════
+// KEEPER MODE — bot sút; user click zone → nhảy chặn
+// ════════════════════════════════════════════════════════
+function keeperTurn(keeperZone) {
     if (busy) return;
     busy = true;
     setInputEnabled(false);
+    actionHint.textContent = '';
 
-    // Player keeper dives to clicked zone
-    const kTarget = ZONE_POS[zone];
+    // User di chuyển keeper đến zone chọn
+    const kTarget = ZONE_POS[keeperZone];
     keeper.style.left   = kTarget.l + '%';
     keeper.style.bottom = kTarget.b + '%';
+    setKeeperPose(zoneToDiveDir(keeperZone));
 
-    const botZone = botShooterDecide();
-    animateBotShot(botZone, zone, (isGoal) => {
-        if (isGoal) { botScore++; botHistory.push('goal'); }
-        else        { botHistory.push('miss'); }
+    // Bot quyết định sút zone nào
+    const botShotZone = botDecideShot();
 
-        // Player shoots back
-        setTimeout(() => {
-            playerCounterShoot((pGoal) => {
-                if (pGoal) { playerScore++; playerHistory.push('goal'); }
-                else       { playerHistory.push('miss'); }
-                round++;
-                updateScoreboard();
-                setTimeout(beginRound, 900);
-            });
-        }, 1200);
+    animateBotShotToGoal(botShotZone, keeperZone, (botScored) => {
+        if (botScored) { botScore++; botHistory.push('goal'); }
+        else           { botHistory.push('miss'); }
+
+        // Player được ghi điểm tự động ngẫu nhiên (parity) hoặc thêm logic AI
+        // Ở keeper mode: player KHÔNG bắn, chỉ bắt bóng
+        // Score của player = số lần bắt thành công
+        if (!botScored) { playerScore++; playerHistory.push('goal'); }
+        else            { playerHistory.push('miss'); }
+
+        round++;
+        updateScoreboard();
+        setTimeout(beginRound, 1100);
     });
 }
 
-function handleKeeperDive(dir) {
-    if (busy) return;
-    const zonePool = DIVE_ZONES[dir];
-    const zone = zonePool[Math.floor(Math.random() * zonePool.length)];
-    handleKeeperClick(zone);
-}
-
-function botShooterDecide() {
+function botDecideShot() {
     const total = BOT_SHOT_WEIGHTS.reduce((a, b) => a + b, 0);
     let r = Math.random() * total;
     for (let i = 0; i < BOT_SHOT_WEIGHTS.length; i++) {
@@ -287,18 +263,18 @@ function botShooterDecide() {
     return 8;
 }
 
-function animateBotShot(botZone, keeperZone, cb) {
-    const target  = ZONE_POS[botZone];
-    const goalNet = document.querySelector('.goal-net');
-    const gRect   = goalNet.getBoundingClientRect();
-    const fieldRect = document.querySelector('.field').getBoundingClientRect();
+function animateBotShotToGoal(botZone, keeperZone, cb) {
+    const target    = ZONE_POS[botZone];
+    const goalNet   = document.querySelector('.goal-net');
+    const gRect     = goalNet.getBoundingClientRect();
+    const fieldRect = document.getElementById('field').getBoundingClientRect();
 
     const bx = gRect.left - fieldRect.left + gRect.width  * (target.l / 100);
     const by = gRect.top  - fieldRect.top  + gRect.height * (1 - target.b / 100);
 
-    ball.style.transition = 'all 0.4s cubic-bezier(.4,0,.2,1)';
-    ball.style.left = bx + 'px';
-    ball.style.top  = by + 'px';
+    ball.style.transition = 'all 0.42s cubic-bezier(.25,.46,.45,.94)';
+    ball.style.left   = bx + 'px';
+    ball.style.top    = by + 'px';
     ball.style.bottom = 'auto';
     ball.classList.add('flying');
 
@@ -306,59 +282,45 @@ function animateBotShot(botZone, keeperZone, cb) {
 
     setTimeout(() => {
         const saved = isZoneSaved(botZone, keeperZone);
-        const zoneEl = document.querySelector(`.zone[data-zone="${botZone}"]`);
-        zoneEl.classList.remove('target');
-
+        const zEl = document.querySelector(`.zone[data-zone="${botZone}"]`);
+        zEl.classList.remove('target');
         if (saved) {
-            zoneEl.classList.add('saved');
+            zEl.classList.add('saved');
             showFlash('GREAT SAVE! 🧤', 'save-flash');
         } else {
-            zoneEl.classList.add('scored');
+            zEl.classList.add('scored');
             showFlash('BOT SCORES! ⚽', 'miss-flash');
         }
         cb(!saved);
-    }, 500);
-}
-
-// Player counter-shoots (auto, random zone for now after keeper round)
-function playerCounterShoot(cb) {
-    resetBallAndKeeper();
-    clearZoneHighlights();
-
-    // Random zone player shoots (auto in keeper mode, just for parity)
-    const zone = Math.floor(Math.random() * 9);
-    const keeperZone = botKeeperDecide(round);
-    animateShot(zone, keeperZone, cb);
-}
-
-// Bot shoots (used in shooter mode for parity round)
-function botShoot(cb) {
-    resetBallAndKeeper();
-    clearZoneHighlights();
-
-    const botZone = botShooterDecide();
-    const keeperZone = Math.floor(Math.random() * 9);
-    animateBotShot(botZone, keeperZone, cb);
+    }, 520);
 }
 
 // ── HELPERS ─────────────────────────────────────────────
+function isZoneSaved(shotZone, keeperZone) {
+    if (shotZone === keeperZone) return true;
+    const sameCol = (shotZone % 3) === (keeperZone % 3);
+    const sameRow = Math.floor(shotZone / 3) === Math.floor(keeperZone / 3);
+    if (sameCol || sameRow) return Math.random() < 0.38;
+    return false;
+}
+
 function resetBallAndKeeper() {
     ball.style.transition = 'none';
-    ball.style.left   = '50%';
-    ball.style.bottom = '38%';
-    ball.style.top    = 'auto';
-    ball.style.transform = 'translateX(-50%)';
+    ball.style.left       = '50%';
+    ball.style.bottom     = '36%';
+    ball.style.top        = 'auto';
+    ball.style.transform  = 'translateX(-50%)';
     ball.classList.remove('flying');
 
     keeper.style.transition = 'none';
-    keeper.style.left   = '50%';
-    keeper.style.bottom = '0%';
-    keeper.style.transform = 'translateX(-50%)';
+    keeper.style.left       = '50%';
+    keeper.style.bottom     = '0%';
+    keeper.style.transform  = 'translateX(-50%)';
+    setKeeperPose('stand');
 
-    // Re-enable transitions after reset frame
     requestAnimationFrame(() => {
-        ball.style.transition   = 'all 0.4s cubic-bezier(.4,0,.2,1)';
-        keeper.style.transition = 'left 0.25s cubic-bezier(.34,1.56,.64,1), bottom 0.2s';
+        ball.style.transition   = 'all 0.42s cubic-bezier(.25,.46,.45,.94)';
+        keeper.style.transition = 'left 0.22s cubic-bezier(.34,1.56,.64,1), bottom 0.18s ease-out';
     });
 }
 
@@ -369,23 +331,19 @@ function clearZoneHighlights() {
 function showFlash(msg, cls) {
     resultFlash.textContent = msg;
     resultFlash.className   = 'result-flash ' + cls;
-    setTimeout(() => resultFlash.classList.add('hidden'), 900);
+    setTimeout(() => resultFlash.classList.add('hidden'), 950);
 }
 
 // ── END GAME ────────────────────────────────────────────
 function endGame() {
     let trophy, title;
-    if (playerScore > botScore) {
-        trophy = '🏆'; title = 'YOU WIN!';
-    } else if (playerScore < botScore) {
-        trophy = '😞'; title = 'BOT WINS!';
-    } else {
-        trophy = '🤝'; title = "IT'S A DRAW!";
-    }
+    if      (playerScore > botScore) { trophy = '🏆'; title = 'YOU WIN!'; }
+    else if (playerScore < botScore) { trophy = '😞'; title = 'BOT WINS!'; }
+    else                             { trophy = '🤝'; title = "IT'S A DRAW!"; }
     resultTrophy.textContent = trophy;
     resultTitle.textContent  = title;
     resultSub.textContent    = `${playerScore} – ${botScore}`;
-    setTimeout(() => showScreen('screenResult'), 600);
+    setTimeout(() => showScreen('screenResult'), 700);
 }
 
 // ── NAV ─────────────────────────────────────────────────
