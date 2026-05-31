@@ -63,13 +63,12 @@
             </div>
         </div>
 
-        <!-- STADIUM -->
+        <!-- STADIUM — Background1.png làm nền toàn sân -->
         <div class="stadium" id="field">
 
-            <img src="../../assets/images/penalty/Background1.png" alt=""
-                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;">
+            <img src="../../assets/images/penalty/Background1.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;">
 
-            <!-- GOAL -->
+            <!-- GOAL — goal.png + zones tương tác -->
             <div class="goal-wrap" id="goalWrap">
                 <img class="goal-img" src="../../assets/images/penalty/goal.png" alt="goal"
                      id="goalImg"
@@ -98,7 +97,7 @@
                         <div class="zone" data-zone="8"></div>
                     </div>
 
-                    <!-- KEEPER — 9 pose -->
+                    <!-- KEEPER — 9 pose: stand / up / down / left / right / left-up / left-down / right-up / right-down -->
                     <div class="keeper" id="keeper">
                         <img class="keeper-img active" id="keeperStand"
                              src="../../assets/images/penalty/goalkeeper.png" alt="GK"
@@ -129,7 +128,7 @@
                      onerror="this.style.display='none'; this.parentElement.classList.add('ball-emoji')">
             </div>
 
-            <!-- SHOOTER -->
+            <!-- SHOOTER — chỉ hiển thị trong shooter mode -->
             <div class="shooter-sprite" id="shooterSprite">
                 <img src="../../assets/images/penalty/shooter.png" alt="shooter"
                      onerror="this.style.display='none'; this.parentElement.classList.add('shooter-emoji')">
@@ -140,7 +139,35 @@
         <!-- Result Flash overlay -->
         <div class="result-flash hidden" id="resultFlash"></div>
 
-        <!-- Action hint bar -->
+        <!-- POWER BAR + ARROW CONTROLS (Shooter mode only) -->
+        <div id="powerBarWrap" class="hidden">
+            <div class="power-row">
+                <span class="power-key-hint">[D] HOLD</span>
+                <div class="power-bar-track">
+                    <div id="powerBarFill"></div>
+                </div>
+                <span id="powerBarLabel">-</span>
+            </div>
+            <div class="control-row">
+                <div class="arrow-pad">
+                    <button class="arrow-btn" data-dir="up-left">↖</button>
+                    <button class="arrow-btn" data-dir="up">↑</button>
+                    <button class="arrow-btn" data-dir="up-right">↗</button>
+                    <button class="arrow-btn" data-dir="left">←</button>
+                    <div class="arrow-center" id="arrowDisplay">•</div>
+                    <button class="arrow-btn" data-dir="right">→</button>
+                    <button class="arrow-btn" data-dir="down-left">↙</button>
+                    <button class="arrow-btn" data-dir="down">↓</button>
+                    <button class="arrow-btn" data-dir="down-right">↘</button>
+                </div>
+                <button id="shootBtn">
+                    <span class="shoot-icon">⚽</span>
+                    <span>SHOOT</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Action hint bar (dưới sân) -->
         <div class="action-panel" id="actionPanel">
             <p class="action-hint" id="actionHint">CLICK VÀO KHUNG THÀNH ĐỂ SÚT</p>
         </div>
@@ -170,10 +197,7 @@
     </div>
 
 </div>
-
-<!-- type="module" — bắt buộc để dùng ES Modules -->
-<script type="module" src="js/penalty.js"></script>
-
+<script src="js/penalty.js"></script>
 <script>
     // Chặn Ctrl+Scroll zoom (desktop)
     window.addEventListener('wheel', function(e) {
