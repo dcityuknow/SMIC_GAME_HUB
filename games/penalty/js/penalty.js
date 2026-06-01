@@ -26,6 +26,13 @@ const ZONE_POS = [
     { l:16, b:-10 },{ l:50, b:1  }, { l:84, b:-10 },
 ];
 
+// Vị trí bóng riêng — chỉnh độc lập với thủ môn
+const BALL_ZONE_POS = [
+    { l:17, b:55 }, { l:50, b:55 }, { l:83, b:55 },  // hàng trên: ↖ ↑ ↗
+    { l:10, b:18 }, { l:50, b:10 }, { l:100, b:16 },  // hàng giữa: ← · →
+    { l:16, b:10 },{ l:50, b:1  }, { l:84, b:10 }, // hàng dưới: ↙ ↓ ↘
+];
+
 function zoneToDiveDir(zone) {
     const dirs = ['left-up','up','right-up','left','stand','right','left-down','down','right-down'];
     return dirs[zone] ?? 'stand';
@@ -459,7 +466,7 @@ function shooterTurn(shotZone, power) {
             playerHistory.push('miss');
             round++;
             updateScoreboard();
-            setTimeout(beginRound, 1100);
+            setTimeout(beginRound, 900);
         });
         return;
     }
@@ -470,7 +477,7 @@ function shooterTurn(shotZone, power) {
         else        { playerHistory.push('miss'); }
         round++;
         updateScoreboard();
-        setTimeout(beginRound, 1100);
+        setTimeout(beginRound, 900);
     });
 }
 
@@ -479,14 +486,75 @@ function botDecideKeeper(r) {
 }
 
 // ── Shared shooter run-up animation + callback ───────────
+// Phase 1 (0–380ms):  shooter-1 → runup class  (chạy đà, img switches to shooter-2)
+// Phase 2 (380–560ms): kicking class            (chân chạm bóng, img switches to shooter-3)
+// Phase 3 (560ms+):   onKick() fires + screen shake + impact flash
 function runShooterAnim(onKick) {
-    shooterSprite.classList.remove('kicking');
+    const img = shooterSprite.querySelector('img');
+
+    // Reset to shooter-1 (standing)
+    shooterSprite.classList.remove('kicking', 'runup', 'impact');
+    if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
+
+    // Phase 1 — chạy đà: swap sang shooter-2
     shooterSprite.classList.add('runup');
+    if (img) {
+        setTimeout(() => {
+            img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter-2.png');
+        }, 80); // delay nhỏ để anim runup bắt đầu trước
+    }
+
+    // Phase 2 — chân chạm bóng: swap sang shooter-3 + kicking class
     setTimeout(() => {
         shooterSprite.classList.remove('runup');
         shooterSprite.classList.add('kicking');
-        onKick();
+        if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter-3.png');
     }, 380);
+
+    // Phase 3 — impact: screen shake + impact flash + fire callback
+    setTimeout(() => {
+        shooterSprite.classList.add('impact');
+        triggerScreenShake();
+        triggerImpactFlash();
+        onKick();
+
+        // Reset sprite back to shooter-1 after a moment
+        setTimeout(() => {
+            shooterSprite.classList.remove('kicking', 'impact');
+            if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
+        }, 400);
+    }, 560);
+}
+
+// ── Screen shake ─────────────────────────────────────────
+function triggerScreenShake() {
+    const field = document.getElementById('field');
+    field.classList.remove('screen-shake');
+    void field.offsetWidth; // reflow to restart animation
+    field.classList.add('screen-shake');
+    setTimeout(() => field.classList.remove('screen-shake'), 420);
+}
+
+// ── Impact flash (brief white flash overlay) ─────────────
+function triggerImpactFlash() {
+    let flashEl = document.getElementById('impactFlashOverlay');
+    if (!flashEl) {
+        flashEl = document.createElement('div');
+        flashEl.id = 'impactFlashOverlay';
+        flashEl.style.cssText = `
+            position:absolute; inset:0; z-index:45; pointer-events:none;
+            background:radial-gradient(ellipse 60% 40% at 42% 75%,
+                rgba(255,255,220,0.55) 0%, rgba(255,200,0,0.18) 50%, transparent 80%);
+            opacity:0;
+        `;
+        document.getElementById('field').appendChild(flashEl);
+    }
+    flashEl.style.transition = 'none';
+    flashEl.style.opacity    = '1';
+    requestAnimationFrame(() => {
+        flashEl.style.transition = 'opacity 0.35s ease-out';
+        flashEl.style.opacity    = '0';
+    });
 }
 
 function animateShotOut(power, cb) {
@@ -512,7 +580,7 @@ function animateShotOut(power, cb) {
             ball.style.left   = cx + 'px';
             ball.style.top    = cy + 'px';
             ball.style.bottom = 'auto';
-            ball.style.transform = `translateX(-50%) rotate(${t*720}deg)`;
+            applyBallPerspective(t, `translateX(-50%) rotate(${t*720}deg)`);
             if (t < 1) { requestAnimationFrame(animFrame); }
             else { showFlash('OUT! ❌', 'miss-flash'); cb(); }
         }
@@ -521,7 +589,7 @@ function animateShotOut(power, cb) {
 }
 
 function animateShotToGoal(shotZone, keeperZone, power, cb) {
-    const target    = ZONE_POS[shotZone];
+    const target    = BALL_ZONE_POS[shotZone];
     const goalNet   = document.querySelector('.goal-net');
     const gRect     = goalNet.getBoundingClientRect();
     const fieldRect = document.getElementById('field').getBoundingClientRect();
@@ -546,6 +614,7 @@ function animateShotToGoal(shotZone, keeperZone, power, cb) {
 
         ball.style.transition = 'none';
         const startTime = performance.now();
+        let totalRot = 0;
 
         function animFrame(now) {
             const t  = Math.min((now - startTime) / duration, 1);
@@ -557,7 +626,8 @@ function animateShotToGoal(shotZone, keeperZone, power, cb) {
             ball.style.top    = cy + 'px';
             ball.style.bottom = 'auto';
             ball.classList.add('flying');
-            ball.style.transform = `translateX(-50%) rotate(${t*360*(1.5+speedFactor*0.5)}deg)`;
+            totalRot = t * 360 * (1.5 + speedFactor * 0.5);
+            applyBallPerspective(t, `translateX(-50%) rotate(${totalRot}deg)`);
 
             if (t < 1) {
                 requestAnimationFrame(animFrame);
@@ -566,9 +636,17 @@ function animateShotToGoal(shotZone, keeperZone, power, cb) {
                     const saved = isZoneSaved(shotZone, keeperZone);
                     const zEl = document.querySelector(`.zone[data-zone="${shotZone}"]`);
                     zEl.classList.remove('target');
-                    if (saved) { zEl.classList.add('saved');  showFlash('SAVED! 🧤',  'miss-flash'); }
-                    else       { zEl.classList.add('scored'); showFlash('GOAL! ⚽',   'goal-flash'); }
-                    cb(!saved);
+                    if (saved) {
+                        zEl.classList.add('saved');
+                        showFlash('SAVED! 🧤', 'miss-flash');
+                        // Bóng bật ra tay thủ môn rồi nảy tưng tưng
+                        animateBallRebound(bx, by, fieldRect, totalRot, () => cb(false));
+                    } else {
+                        zEl.classList.add('scored');
+                        showFlash('GOAL! ⚽', 'goal-flash');
+                        // Bóng lăn nhẹ trong lưới rồi dừng
+                        animateBallRollInNet(bx, by, totalRot, () => cb(true));
+                    }
                 }, 60);
             }
         }
@@ -576,8 +654,210 @@ function animateShotToGoal(shotZone, keeperZone, power, cb) {
     });
 }
 
+// ── Bóng bật ra khi bị đỡ: rebound vật lý + nảy tưng tưng giảm dần ──
+function animateBallRebound(impactX, impactY, fieldRect, startRot, cb) {
+    const floorY    = fieldRect.height - fieldRect.height * 0.13; // mặt sân (pixel từ top)
+    const bounceDamp = 0.50;   // mỗi lần nảy mất 50% năng lượng nảy dọc
+    const rollFric   = 0.82;   // ma sát ngang khi chạm sàn
+    const gravity    = 1400;   // px/s²
+
+    // Hướng bật: lệch xuống-dưới về phía người chơi + xéo ngẫu nhiên
+    let vx = (Math.random() - 0.5) * 320;
+    let vy = -(280 + Math.random() * 140);   // bật lên trước
+
+    let cx = impactX, cy = impactY;
+    let rot = startRot;
+    let bounceCount = 0;
+    const maxBounces = 5;
+    let lastTime = performance.now();
+
+    // Bóng bắt đầu ở vị trí khung thành → nhỏ, to dần khi về phía người chơi
+    const BASE_SIZE = 160;
+    // Ước tính t dựa theo cy (impactY gần trên màn, floorY gần dưới)
+    function estimateT(curY) {
+        return Math.max(0, Math.min(1, 1 - (curY - impactY) / (floorY - impactY)));
+    }
+
+    function tick(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.04);
+        lastTime = now;
+
+        vy += gravity * dt;
+        cx += vx * dt;
+        cy += vy * dt;
+
+        // Perspective scale: bóng to dần khi nảy về phía người dùng
+        const tPersp = estimateT(cy);
+        applyBallPerspective(tPersp);
+
+        // Chạm sàn → nảy
+        if (cy >= floorY) {
+            cy = floorY;
+            vy = -Math.abs(vy) * bounceDamp;
+            vx *= rollFric;
+            bounceCount++;
+            if (Math.abs(vy) < 30 || bounceCount >= maxBounces) {
+                // Năng lượng quá nhỏ → chuyển sang lăn phẳng rồi dừng
+                animateBallRollToStop(cx, cy, vx, rot, cb);
+                return;
+            }
+        }
+
+        // Bóng squash nhẹ khi tiếp đất (scale theo vy)
+        const squash = cy >= floorY - 2 ? 'scaleY(0.75) scaleX(1.18)' : '';
+        rot += vx * dt * 3.5;
+
+        ball.style.left      = cx + 'px';
+        ball.style.top       = cy + 'px';
+        ball.style.bottom    = 'auto';
+        ball.style.transform = `translateX(-50%) rotate(${rot}deg) ${squash}`;
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
+// ── Bóng lăn chậm dần rồi dừng (ma sát) ──
+function animateBallRollToStop(startX, startY, initVx, startRot, cb) {
+    let cx  = startX, cy = startY;
+    let vx  = initVx;
+    let rot = startRot;
+    // Friction per second: tốc độ giảm dần tự nhiên
+    const frictionPS = 3.2;   // giảm tuyến tính px/s mỗi giây
+    let lastTime = performance.now();
+
+    function tick(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.04);
+        lastTime = now;
+
+        // Giảm tốc tuyến tính (giống ma sát thật)
+        const sign = vx > 0 ? 1 : -1;
+        vx -= sign * frictionPS * 60 * dt;
+        if (sign !== (vx > 0 ? 1 : -1)) vx = 0; // không đổi chiều
+
+        cx  += vx * dt;
+        rot += vx * dt * 2.8;
+
+        ball.style.left      = cx + 'px';
+        ball.style.top       = cy + 'px';
+        ball.style.bottom    = 'auto';
+        ball.style.transform = `translateX(-50%) rotate(${rot}deg)`;
+
+        if (Math.abs(vx) > 2) {
+            requestAnimationFrame(tick);
+        } else {
+            ball.classList.remove('flying');
+            cb();
+        }
+    }
+    requestAnimationFrame(tick);
+}
+
+// ── Bóng vào lưới: nảy tưng tưng giảm dần rồi lăn chậm dừng ──
+function animateBallRollInNet(impactX, impactY, startRot, cb) {
+    // Bóng đã ở gần khung thành → giữ nhỏ theo phối cảnh
+    const NET_SCALE  = perspectiveScale(1.0);   // tỷ lệ nhỏ nhất (gần khung thành)
+    const BASE_SIZE  = 160;
+    const ballSizePx = Math.round(BASE_SIZE * NET_SCALE); // ~61px
+
+    // "Sàn lưới" ảo — bóng nảy trong vùng goal-net, không xuống sân
+    // Dùng impactY + 1 lần offset nhỏ làm điểm nảy đầu
+    const netFloorY  = impactY + ballSizePx * 0.6;  // nền lưới gần như ngay dưới impact
+
+    const bounceDamp = 0.48;   // mất ~50% năng lượng mỗi lần nảy
+    const rollFric   = 0.78;
+    const gravity    = 1800;   // px/s² — nặng hơn để nảy nhanh ngắn
+
+    // Vận tốc ban đầu: bóng đập vào lưới → nảy ra phía sau + lên trên nhẹ
+    let vx = (Math.random() - 0.5) * 120;   // lệch ngang ngẫu nhiên
+    let vy = -(160 + Math.random() * 80);    // nảy lên
+    let cx = impactX, cy = impactY;
+    let rot = startRot;
+    let bounceCount = 0;
+    const maxBounces = 6;
+    let lastTime = performance.now();
+
+    // Đặt size cố định ở tỷ lệ nhỏ (xa)
+    ball.style.width  = ballSizePx + 'px';
+    ball.style.height = ballSizePx + 'px';
+
+    function tick(now) {
+        const dt = Math.min((now - lastTime) / 1000, 0.04);
+        lastTime = now;
+
+        vy += gravity * dt;
+        cx += vx * dt;
+        cy += vy * dt;
+
+        // Giữ bóng trong vùng goal-net (clamp ngang ±40px quanh impact)
+
+        const goalNet    = document.querySelector('.goal-net');
+	const gRect      = goalNet.getBoundingClientRect();
+	const fieldRect  = document.getElementById('field').getBoundingClientRect();
+	const netFloorY  = gRect.bottom - fieldRect.top - ballSizePx * 0.5;
+	const netLeft    = gRect.left - fieldRect.left + ballSizePx * 0.5;
+	const netRight   = gRect.right - fieldRect.left - ballSizePx * 0.5;
+	const clampLeft  = netLeft;
+	const clampRight = netRight;
+
+
+        if (cx < clampLeft)  { cx = clampLeft;  vx = Math.abs(vx) * 0.55; }
+        if (cx > clampRight) { cx = clampRight; vx = -Math.abs(vx) * 0.55; }
+
+        // Chạm "sàn lưới" → nảy lên
+        if (cy >= netFloorY) {
+            cy = netFloorY;
+            vy = -Math.abs(vy) * bounceDamp;
+            vx *= rollFric;
+            bounceCount++;
+
+            if (Math.abs(vy) < 25 || bounceCount >= maxBounces) {
+                // Chuyển sang lăn nhẹ rồi dừng hẳn
+                // Không dùng animateBallRollToStop vì sân là phẳng dưới sân
+                // Chỉ lăn nhẹ tại chỗ rồi callback
+                animateBallRollToStop(cx, cy, vx * 0.4, rot, cb);
+                return;
+            }
+        }
+
+        // Squash nhẹ khi gần sàn
+        const squash = cy >= netFloorY - 3 ? 'scaleY(0.72) scaleX(1.2)' : '';
+        rot += vx * dt * 4.2;
+
+        ball.style.left      = cx + 'px';
+        ball.style.top       = cy + 'px';
+        ball.style.bottom    = 'auto';
+        ball.style.transform = `translateX(-50%) rotate(${rot}deg) ${squash}`;
+        requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
 function easeInOutQuart(t) {
     return t < 0.5 ? 8*t*t*t*t : 1 - Math.pow(-2*t+2, 4)/2;
+}
+
+// ── Perspective scale: bóng lớn khi gần (dưới sân), nhỏ khi xa (gần khung thành) ──
+// t=0 → bóng ở chân người dùng (gần, to),  t=1 → bóng ở khung thành (xa, nhỏ)
+function perspectiveScale(t) {
+    // Tuyến tính từ 1.0 → 0.38 theo chiều sâu (có thể chỉnh BIG/SMALL)
+    const BIG   = 1.0;   // scale khi ở gần nhất (t=0)
+    const SMALL = 0.75;  // scale khi ở xa nhất  (t=1)
+    return BIG + (SMALL - BIG) * t;
+}
+
+// ── Áp dụng scale phối cảnh vào element bóng ──
+function applyBallPerspective(t, extraTransform) {
+    const BASE_SIZE = 160; // px — kích thước CSS gốc của .ball
+    const s = perspectiveScale(t);
+    const sz = Math.round(BASE_SIZE * s);
+    ball.style.width  = sz + 'px';
+    ball.style.height = sz + 'px';
+    if (extraTransform !== undefined) {
+        ball.style.transform = extraTransform;
+    }
+    // Cập nhật drop-shadow tương ứng kích thước
+    const shadowSize = Math.round(4 + s * 8);
+    ball.style.filter = `drop-shadow(0 ${shadowSize}px ${shadowSize * 2}px rgba(0,0,0,0.7))`;
 }
 
 // ════════════════════════════════════════════════════════
@@ -598,7 +878,7 @@ function keeperTurn(keeperZone) {
         else            { playerHistory.push('miss'); }
         round++;
         updateScoreboard();
-        setTimeout(beginRound, 1100);
+        setTimeout(beginRound, 900);
     });
 }
 
@@ -614,7 +894,7 @@ function botDecideShot() {
 
 // Keeper mode: bot shooter also gets the run-up animation
 function animateBotShotToGoal(botZone, keeperZone, cb) {
-    const target    = ZONE_POS[botZone];
+    const target    = BALL_ZONE_POS[botZone];
     const goalNet   = document.querySelector('.goal-net');
     const gRect     = goalNet.getBoundingClientRect();
     const fieldRect = document.getElementById('field').getBoundingClientRect();
@@ -650,7 +930,7 @@ function animateBotShotToGoal(botZone, keeperZone, cb) {
             ball.style.left   = cx + 'px';
             ball.style.top    = cy + 'px';
             ball.style.bottom = 'auto';
-            ball.style.transform = `translateX(-50%) rotate(${t*540}deg)`;
+            applyBallPerspective(t, `translateX(-50%) rotate(${t*540}deg)`);
 
             if (t < 1) {
                 requestAnimationFrame(animFrame);
@@ -659,9 +939,8 @@ function animateBotShotToGoal(botZone, keeperZone, cb) {
                     const saved = isZoneSaved(botZone, keeperZone);
                     const zEl = document.querySelector(`.zone[data-zone="${botZone}"]`);
                     zEl.classList.remove('target');
-                    if (saved) { zEl.classList.add('saved');  showFlash('GREAT SAVE! 🧤', 'save-flash'); }
-                    else       { zEl.classList.add('scored'); showFlash('BOT SCORES! ⚽', 'miss-flash'); }
-                    cb(!saved);
+                    if (saved) { zEl.classList.add('saved'); showFlash('GREAT SAVE! 🧤', 'save-flash'); animateBallRebound(bx, by, fieldRect, t*540, () => cb(false)); }
+                    else { zEl.classList.add('scored'); showFlash('BOT SCORES! ⚽', 'miss-flash'); animateBallRollInNet(bx, by, t*540, () => cb(true)); }
                 }, 60);
             }
         }
@@ -683,6 +962,9 @@ function resetBallAndKeeper() {
     ball.style.left       = '50%';
     ball.style.bottom     = '16%';
     ball.style.top        = 'auto';
+    ball.style.width      = '160px';
+    ball.style.height     = '160px';
+    ball.style.filter     = 'drop-shadow(0 4px 8px rgba(0,0,0,0.7))';
     ball.style.transform  = 'translateX(-50%)';
     ball.classList.remove('flying');
 
@@ -693,7 +975,10 @@ function resetBallAndKeeper() {
     keeper.style.transform  = 'translateX(-50%)';
     setKeeperPose('stand');
 
-    shooterSprite.classList.remove('runup','kicking');
+    shooterSprite.classList.remove('runup','kicking','impact');
+    // Reset về shooter-1 (đứng yên)
+    const shooterImg = shooterSprite.querySelector('img');
+    if (shooterImg) shooterImg.src = shooterImg.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
 
     requestAnimationFrame(() => {
         ball.style.transition   = 'all 0.42s cubic-bezier(.25,.46,.45,.94)';
