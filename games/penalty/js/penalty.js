@@ -494,21 +494,21 @@ function runShooterAnim(onKick) {
 
     // Reset to shooter-1 (standing)
     shooterSprite.classList.remove('kicking', 'runup', 'impact');
-    if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
+    if (img) img.setAttribute('src', img.getAttribute('src').replace(/shooter(-\d)?\.png/, 'shooter.png'));
 
     // Phase 1 — chạy đà: swap sang shooter-2
     shooterSprite.classList.add('runup');
     if (img) {
         setTimeout(() => {
-            img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter-2.png');
-        }, 80); // delay nhỏ để anim runup bắt đầu trước
+            img.setAttribute('src', img.getAttribute('src').replace(/shooter(-\d)?\.png/, 'shooter-2.png'));
+        }, 80);
     }
 
     // Phase 2 — chân chạm bóng: swap sang shooter-3 + kicking class
     setTimeout(() => {
         shooterSprite.classList.remove('runup');
         shooterSprite.classList.add('kicking');
-        if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter-3.png');
+        if (img) img.setAttribute('src', img.getAttribute('src').replace(/shooter(-\d)?\.png/, 'shooter-3.png'));
     }, 380);
 
     // Phase 3 — impact: screen shake + impact flash + fire callback
@@ -521,7 +521,7 @@ function runShooterAnim(onKick) {
         // Reset sprite back to shooter-1 after a moment
         setTimeout(() => {
             shooterSprite.classList.remove('kicking', 'impact');
-            if (img) img.src = img.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
+            if (img) img.setAttribute('src', img.getAttribute('src').replace(/shooter(-\d)?\.png/, 'shooter.png'));
         }, 400);
     }, 560);
 }
@@ -978,7 +978,7 @@ function resetBallAndKeeper() {
     shooterSprite.classList.remove('runup','kicking','impact');
     // Reset về shooter-1 (đứng yên)
     const shooterImg = shooterSprite.querySelector('img');
-    if (shooterImg) shooterImg.src = shooterImg.src.replace(/shooter(-\d)?\.png/, 'shooter.png');
+    if (shooterImg) shooterImg.setAttribute('src', shooterImg.getAttribute('src').replace(/shooter(-\d)?\.png/, 'shooter.png'));
 
     requestAnimationFrame(() => {
         ball.style.transition   = 'all 0.42s cubic-bezier(.25,.46,.45,.94)';
