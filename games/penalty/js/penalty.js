@@ -1003,6 +1003,7 @@ function endGame() {
     if      (playerScore > botScore) { trophy = '🏆'; title = 'YOU WIN!'; }
     else if (playerScore < botScore) { trophy = '😞'; title = 'BOT WINS!'; }
     else                             { trophy = '🤝'; title = "IT'S A DRAW!"; }
+    if (playerScore > botScore && typeof awardWin === 'function') awardWin();
     resultTrophy.textContent = trophy;
     resultTitle.textContent  = title;
     resultSub.textContent    = `${playerScore} – ${botScore}`;

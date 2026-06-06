@@ -508,6 +508,9 @@ function checkGameOver() {
         }
         
         victoryOverlay.classList.add('active');
+        // Award win points if user won
+        const userWon = (userTeam === 'left' && ropePosition < 0) || (userTeam === 'right' && ropePosition > 0);
+        if (userWon && typeof awardWin === 'function') awardWin();
         canvas.style.display = 'block';
         startFireworks();
     }
