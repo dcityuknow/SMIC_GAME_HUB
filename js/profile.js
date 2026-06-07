@@ -20,7 +20,7 @@ function sel(sig) {
     // Hardcode các selector đã tính sẵn:
     const map = {
         'setUsername(string)':    'c47f0027',
-        'addScore(uint256)':      '9a3b9b4b',
+        'addScore(uint256)':      'e2eb5425',
         'getProfile(address)':    '08ae4b0c',
         'getLeaderboard(uint256)':'a8f3b7ae',
     };
