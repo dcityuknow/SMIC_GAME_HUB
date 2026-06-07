@@ -5,7 +5,7 @@
  * Contract  : ScoreBoard trên Seismic Testnet
  */
 
-const CONTRACT_ADDRESS = '0x8A58A4a8d801C35c7a3c08f521b023bB9a6132b4';
+const CONTRACT_ADDRESS = '0x3143B30945c022217F79580867da3b159FCc2905';
 const RPC_URL          = 'https://testnet-2.seismictest.net/rpc';
 const EXPLORER_URL     = 'https://seismic-testnet.socialscan.io';
 
