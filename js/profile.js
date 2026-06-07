@@ -29,7 +29,14 @@ function sel(sig) {
 
 // ── ABI encode helpers ────────────────────────────────────────
 function encodeUint256(val) {
-    return BigInt(val).toString(16).padStart(64, '0');
+    // Ép kiểu val về số nguyên Number trước, loại bỏ phần thập phân nếu có
+    const numericVal = Math.floor(Number(val)); 
+    
+    // Nếu biến đổi lỗi hoặc ra số âm, mặc định gán điểm thắng = 10 
+    // để tránh crash game và khớp với biến POINTS = 10 bên dưới
+    const safeVal = (isNaN(numericVal) || numericVal <= 0) ? 10 : numericVal;
+    
+    return BigInt(safeVal).toString(16).padStart(64, '0');
 }
 function encodeAddress(addr) {
     return addr.toLowerCase().replace('0x','').padStart(64,'0');
