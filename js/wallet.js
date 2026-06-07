@@ -457,10 +457,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Expose globals ────────────────────────────────────────────
+// Notify profile.js
+    if (typeof window.__smicWalletChanged === "function") window.__smicWalletChanged(walletAddress);
+};
+
 window.SmicWallet = {
     connect:    connectWallet,
     disconnect: disconnectWallet,
     switchToSeismic,
     showToast:  showWalletToast,
     getAddress: () => walletAddress,
+    get _provider() { return activeProvider; },
 };
