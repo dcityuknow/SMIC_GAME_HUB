@@ -1,14 +1,14 @@
 // ============================================================
 //  wallet.js  –  SMIC GAME HUB  ×  Seismic Testnet
 //  Chain ID   : 5124 (0x1404)
-//  RPC        : https://gcp-2.seismictest.net/rpc
+//  RPC        : https://testnet-2.seismictest.net/rpc
 //  Explorer   : https://seismic-testnet.socialscan.io/
 //  Faucet     : https://community-faucet.seismictest.net/
 // ============================================================
 
 const SEISMIC_CHAIN_ID   = '0x1404';   // 5124 decimal
 const SEISMIC_CHAIN_NAME = 'Seismic Testnet';
-const SEISMIC_RPC        = 'https://gcp-2.seismictest.net/rpc';
+const SEISMIC_RPC        = 'https://testnet-2.seismictest.net/rpc';
 const SEISMIC_EXPLORER   = 'https://seismic-testnet.socialscan.io/';
 const SEISMIC_FAUCET     = 'https://community-faucet.seismictest.net/';
 
