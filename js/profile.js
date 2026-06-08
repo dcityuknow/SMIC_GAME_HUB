@@ -127,50 +127,75 @@ async function contract_setUsername(username) {
 }
 
 async function contract_addScore(points) {
-    // 1. Đảm bảo ví đã được kết nối
-    if (!userAccount) {
-        alert("Please connect wallet first!");
+    // 1. Kiểm tra và lấy địa chỉ ví từ mọi nguồn có thể có trong hệ thống của bạn
+    let currentAccount = "";
+
+    if (typeof userAccount !== 'undefined' && userAccount) {
+        currentAccount = userAccount;
+    } else if (typeof window.userAccount !== 'undefined' && window.userAccount) {
+        currentAccount = window.userAccount;
+    } else if (typeof window.SmicWallet !== 'undefined' && window.SmicWallet.getAddress()) {
+        currentAccount = window.SmicWallet.getAddress();
+    } else {
+        // Thử check nhanh xem ví OKX đã kết nối sẵn chưa để lấy account luôn
+        try {
+            const provider = window.okxwallet || window.ethereum;
+            if (provider) {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (accounts && accounts.length > 0) {
+                    currentAccount = accounts[0];
+                }
+            }
+        } catch (e) {
+            console.error("Lỗi lấy account tự động:", e);
+        }
+    }
+
+    // Nếu cuối cùng vẫn không tìm thấy địa chỉ ví nào
+    if (!currentAccount) {
+        alert("Please connect your OKX wallet first!");
         return;
     }
 
-    // 2. Ép kiểu dữ liệu points thật nghiêm ngặt để sinh Calldata chuẩn
+    // 2. Ép kiểu dữ liệu points để đồng bộ calldata
     const safePoints = Math.floor(Number(points)) || 10;
-    const data = "0x" + FUNCTION_SELECTOR + encodeUint256(safePoints);
+    const data = '0x' + sel('addScore(uint256)') + encodeUint256(safePoints);
 
-    // 3. Cấu trúc lại dữ liệu giao dịch đúng chuẩn quy định của ví OKX
+    // 3. Khai báo gói tham số giao dịch với biến currentAccount đã được định nghĩa chắc chắn
     const transactionParameters = {
-        from: userAccount,                 // Địa chỉ người gửi (Bắt buộc phải có)
-        to: CONTRACT_ADDRESS,              // Địa chỉ Smart Contract nhận
-        data: data,                        // Calldata đã mã hóa 
-        value: "0x0",                      // Số lượng ETH/Native token gửi kèm (0x0 = 0)
-        // Ép một hạn mức gas Limit cố định (ví dụ 100,000 gas) 
-        // Điều này giúp ví OKX không bị lỗi "Không thể ước tính Gas" khi dApp chạy trên mạng Testnet
-        gas: "0x186A0"                     // 100,000 viết dưới dạng Hexadecimal
+        from: currentAccount,              // Sử dụng biến đã check an toàn
+        to: CONTRACT_ADDRESS,              
+        data: data,                        
+        value: "0x0",                      
+        gas: "0x186A0"                     // Hạn mức gas cố định (100,000 gas) giúp sáng nút Xác nhận trên OKX
     };
 
     try {
-        console.log("Sending TX parameters to OKX Wallet:", transactionParameters);
+        console.log("[SMIC GAME HUB] Gọi ví OKX xử lý addScore:", transactionParameters);
         
-        // Gọi phương thức ký của ví thông qua provider hợp lệ (OKX hoặc Ethereum)
         const provider = window.okxwallet || window.ethereum;
         if (!provider) {
             alert("OKX Wallet extension not found!");
             return;
         }
 
+        // Đẩy lệnh popup yêu cầu ký giao dịch lên ví OKX
         const txHash = await provider.request({
             method: 'eth_sendTransaction',
             params: [transactionParameters],
         });
 
-        console.log("Transaction sent successfully! Hash:", txHash);
-        alert("Score submitted successfully! Hash: " + txHash);
+        console.log("[SMIC GAME HUB] Giao dịch thành công! Tx Hash:", txHash);
+        
+        if (typeof window.SmicWallet !== 'undefined' && window.SmicWallet.showToast) {
+            window.SmicWallet.showToast("Score updated successfully!");
+        } else {
+            alert("Score added on-chain! Hash: " + txHash);
+        }
     } catch (error) {
-        console.error("OKX Wallet confirmation failed or rejected:", error);
-        // Thay vì alert làm đóng băng game loop, in ra lỗi chi tiết ở Console
+        console.error("[SMIC GAME HUB] Giao dịch thất bại hoặc bị từ chối ký:", error);
     }
 }
-
 async function contract_getLeaderboard(limit=10) {
     try {
         const data   = '0x' + sel('getLeaderboard(uint256)') + encodeUint256(limit);
