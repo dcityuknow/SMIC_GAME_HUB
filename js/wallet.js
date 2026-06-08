@@ -312,7 +312,7 @@ function injectWalletButtons() {
         50%{box-shadow:0 0 12px #5deb8a,0 0 22px rgba(93,235,138,0.3);}
     }
     #smicFaucetBtn {
-        position:fixed; top:16px; left:16px; z-index:500;
+        position:fixed; top:56px; right:16px; z-index:500;
         display:flex; align-items:center; gap:6px;
         padding:9px 18px;
         background:rgba(10,14,26,0.8);
