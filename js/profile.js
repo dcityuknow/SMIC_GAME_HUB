@@ -127,17 +127,18 @@ async function contract_setUsername(username) {
 }
 
 async function contract_addScore(points) {
-    // 1. Kiểm tra và lấy địa chỉ ví từ mọi nguồn có thể có trong hệ thống của bạn
+    // 1. Lấy địa chỉ ví an toàn — KHÔNG dùng bare `userAccount` vì biến đó
+    //    không tồn tại ở scope của profile.js → ReferenceError
     let currentAccount = "";
 
-    if (typeof userAccount !== 'undefined' && userAccount) {
-        currentAccount = userAccount;
-    } else if (typeof window.userAccount !== 'undefined' && window.userAccount) {
-        currentAccount = window.userAccount;
-    } else if (typeof window.SmicWallet !== 'undefined' && window.SmicWallet.getAddress()) {
+    // Ưu tiên SmicWallet (source of truth chính của hub)
+    if (window.SmicWallet?.getAddress?.()) {
         currentAccount = window.SmicWallet.getAddress();
+    } else if (window.userAccount) {
+        // Một số game page gán vào window.userAccount
+        currentAccount = window.userAccount;
     } else {
-        // Thử check nhanh xem ví OKX đã kết nối sẵn chưa để lấy account luôn
+        // Fallback: hỏi thẳng provider xem có account nào đã connect chưa
         try {
             const provider = window.okxwallet || window.ethereum;
             if (provider) {
