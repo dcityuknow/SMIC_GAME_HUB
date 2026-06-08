@@ -19,10 +19,10 @@ function sel(sig) {
     // Tính 4-byte selector từ function signature (không dùng ethers)
     // Hardcode các selector đã tính sẵn:
     const map = {
-        'setUsername(string)':    'c47f0027',
-        'addScore(uint256)':      'e2eb5425',
-        'getProfile(address)':    '08ae4b0c',
-        'getLeaderboard(uint256)':'a8f3b7ae',
+        'setUsername(string)':    'ed59313a',
+        'addScore(uint256)':      '10b2afce',
+        'getProfile(address)':    '0f53a470',
+        'getLeaderboard(uint256)':'a34b46fe',
     };
     return map[sig] || '00000000';
 }
