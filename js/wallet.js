@@ -149,6 +149,8 @@ async function connectWithProvider(provider) {
         activeProvider = provider;
         const accounts = await provider.request({ method: 'eth_requestAccounts' });
         walletAddress = accounts[0];
+        // ── Lưu vào localStorage để các trang khác dùng chung ──
+        localStorage.setItem('smicWallet', walletAddress);
         await switchToSeismic();
         updateWalletUI();
         attachProviderEvents(provider);
@@ -167,6 +169,12 @@ function attachProviderEvents(provider) {
     try { provider.removeAllListeners?.('chainChanged'); } catch (_) {}
     provider.on('accountsChanged', accounts => {
         walletAddress = accounts[0] || null;
+        // ── Đồng bộ localStorage khi đổi / ngắt account từ ví ──
+        if (walletAddress) {
+            localStorage.setItem('smicWallet', walletAddress);
+        } else {
+            localStorage.removeItem('smicWallet');
+        }
         updateWalletUI();
         if (typeof window.__smicWalletChanged === 'function') {
             window.__smicWalletChanged(walletAddress);
@@ -178,6 +186,8 @@ function attachProviderEvents(provider) {
 function disconnectWallet() {
     walletAddress  = null;
     activeProvider = null;
+    // ── Xoá localStorage khi disconnect ──
+    localStorage.removeItem('smicWallet');
     updateWalletUI();
     showWalletToast('🔌 Wallet disconnected.');
     if (typeof window.__smicWalletChanged === 'function') {
@@ -302,7 +312,7 @@ function injectWalletButtons() {
         50%{box-shadow:0 0 12px #5deb8a,0 0 22px rgba(93,235,138,0.3);}
     }
     #smicFaucetBtn {
-        position:fixed; top:56px; right:16px; z-index:500;
+        position:fixed; top:16px; left:16px; z-index:500;
         display:flex; align-items:center; gap:6px;
         padding:9px 18px;
         background:rgba(10,14,26,0.8);
@@ -428,22 +438,37 @@ document.addEventListener('DOMContentLoaded', () => {
     injectWalletButtons();
     updateWalletUI();
 
-    // Auto-reconnect nếu ví đã connect trước đó
+    const saved = localStorage.getItem('smicWallet');
     const providers = detectProviders();
+
     if (providers.length > 0) {
         const p = providers[0].provider;
         p.request({ method: 'eth_accounts' }).then(async accounts => {
-            if (accounts.length) {
-                walletAddress  = accounts[0];
+            const current = accounts[0] || null;
+            if (current) {
+                // Ví đang mở và có account — dùng trực tiếp
+                walletAddress  = current;
                 activeProvider = p;
+                localStorage.setItem('smicWallet', current);
                 try { await switchToSeismic(); } catch (_) {}
                 updateWalletUI();
                 attachProviderEvents(p);
                 if (typeof window.__smicWalletChanged === 'function') {
                     window.__smicWalletChanged(walletAddress);
                 }
+            } else if (saved) {
+                // Ví bị lock nhưng đã từng connect — hiện UI là đã kết nối
+                walletAddress = saved;
+                updateWalletUI();
             }
-        }).catch(() => {});
+        }).catch(() => {
+            // Không lấy được account (ví chưa cài, bị block,...) — dùng saved nếu có
+            if (saved) { walletAddress = saved; updateWalletUI(); }
+        });
+    } else if (saved) {
+        // Không có ví extension nào — vẫn hiện địa chỉ đã lưu
+        walletAddress = saved;
+        updateWalletUI();
     }
 });
 
