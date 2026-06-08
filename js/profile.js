@@ -127,8 +127,48 @@ async function contract_setUsername(username) {
 }
 
 async function contract_addScore(points) {
-    const data = '0x' + sel('addScore(uint256)') + encodeUint256(points);
-    return sendTx(data, '0x186A0');
+    // 1. Đảm bảo ví đã được kết nối
+    if (!userAccount) {
+        alert("Please connect wallet first!");
+        return;
+    }
+
+    // 2. Ép kiểu dữ liệu points thật nghiêm ngặt để sinh Calldata chuẩn
+    const safePoints = Math.floor(Number(points)) || 10;
+    const data = "0x" + FUNCTION_SELECTOR + encodeUint256(safePoints);
+
+    // 3. Cấu trúc lại dữ liệu giao dịch đúng chuẩn quy định của ví OKX
+    const transactionParameters = {
+        from: userAccount,                 // Địa chỉ người gửi (Bắt buộc phải có)
+        to: CONTRACT_ADDRESS,              // Địa chỉ Smart Contract nhận
+        data: data,                        // Calldata đã mã hóa 
+        value: "0x0",                      // Số lượng ETH/Native token gửi kèm (0x0 = 0)
+        // Ép một hạn mức gas Limit cố định (ví dụ 100,000 gas) 
+        // Điều này giúp ví OKX không bị lỗi "Không thể ước tính Gas" khi dApp chạy trên mạng Testnet
+        gas: "0x186A0"                     // 100,000 viết dưới dạng Hexadecimal
+    };
+
+    try {
+        console.log("Sending TX parameters to OKX Wallet:", transactionParameters);
+        
+        // Gọi phương thức ký của ví thông qua provider hợp lệ (OKX hoặc Ethereum)
+        const provider = window.okxwallet || window.ethereum;
+        if (!provider) {
+            alert("OKX Wallet extension not found!");
+            return;
+        }
+
+        const txHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [transactionParameters],
+        });
+
+        console.log("Transaction sent successfully! Hash:", txHash);
+        alert("Score submitted successfully! Hash: " + txHash);
+    } catch (error) {
+        console.error("OKX Wallet confirmation failed or rejected:", error);
+        // Thay vì alert làm đóng băng game loop, in ra lỗi chi tiết ở Console
+    }
 }
 
 async function contract_getLeaderboard(limit=10) {
