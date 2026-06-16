@@ -39,6 +39,13 @@
                 <p>Chọn góc trên khung thành để nhảy chặn</p>
                 <div class="card-cta">SELECT →</div>
             </div>
+            <div class="mode-card" onclick="startGame('training')">
+                <div class="card-num">03</div>
+                <div class="card-icon">🏃</div>
+                <h2>TRAINING</h2>
+                <p>Rê bóng tự do, luyện kỹ năng cùng nhân vật</p>
+                <div class="card-cta">SELECT →</div>
+            </div>
         </div>
     </div>
 
@@ -63,12 +70,11 @@
             </div>
         </div>
 
-        <!-- STADIUM — Background1.png làm nền toàn sân -->
+        <!-- STADIUM -->
         <div class="stadium" id="field">
-
             <img src="../../assets/images/penalty/Background1.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none;">
 
-            <!-- GOAL — goal.png + zones tương tác -->
+            <!-- GOAL -->
             <div class="goal-wrap" id="goalWrap">
                 <img class="goal-img" src="../../assets/images/penalty/goal.png" alt="goal"
                      id="goalImg"
@@ -83,7 +89,6 @@
                     <div class="goal-depth-t"></div>
                 </div>
 
-                <!-- Lưới + 9 zone click -->
                 <div class="goal-net" id="goalNet">
                     <div class="zones" id="zones">
                         <div class="zone" data-zone="0"></div>
@@ -97,7 +102,6 @@
                         <div class="zone" data-zone="8"></div>
                     </div>
 
-                    <!-- KEEPER — 9 pose: stand / up / down / left / right / left-up / left-down / right-up / right-down -->
                     <div class="keeper" id="keeper">
                         <img class="keeper-img active" id="keeperStand"
                              src="../../assets/images/penalty/goalkeeper.png" alt="GK"
@@ -128,12 +132,11 @@
                      onerror="this.style.display='none'; this.parentElement.classList.add('ball-emoji')">
             </div>
 
-            <!-- SHOOTER — chỉ hiển thị trong shooter mode -->
+            <!-- SHOOTER -->
             <div class="shooter-sprite" id="shooterSprite">
                 <img src="../../assets/images/penalty/shooter.png" alt="shooter"
                      onerror="this.style.display='none'; this.parentElement.classList.add('shooter-emoji')">
             </div>
-
         </div><!-- /stadium -->
 
         <!-- Result Flash overlay -->
@@ -167,12 +170,69 @@
             </div>
         </div>
 
-        <!-- Action hint bar (dưới sân) -->
+        <!-- Action hint bar -->
         <div class="action-panel" id="actionPanel">
             <p class="action-hint" id="actionHint">CLICK VÀO KHUNG THÀNH ĐỂ SÚT</p>
         </div>
 
     </div><!-- /screenGame -->
+
+    <!-- ============ TRAINING SCREEN ============ -->
+    <div class="screen hidden" id="screenTraining">
+
+        <!-- Background sân -->
+        <img id="tr-background" src="../../assets/images/penalty/training/Background - test.png" alt="Sân bóng" />
+
+        <!-- Băng rôn LED -->
+        <div id="tr-led-banner">
+            <div id="tr-led-track"></div>
+            <div class="tr-led-dot-row"></div>
+            <div class="tr-led-scanline"></div>
+        </div>
+
+        <!-- Chọn nhân vật -->
+        <div id="tr-character-select">
+            <div class="tr-char-thumb active" data-id="noxx">
+                <img src="../../assets/images/penalty/training/2-noxx.png" alt="Noxx" />
+            </div>
+            <div class="tr-char-thumb" data-id="xeali">
+                <img src="../../assets/images/penalty/training/2-xeali.png" alt="Xeali" />
+            </div>
+            <div class="tr-char-thumb" data-id="lyron">
+                <img src="../../assets/images/penalty/training/2-lyron.png" alt="Lyron" />
+            </div>
+        </div>
+
+        <!-- Thanh lực sút -->
+        <div id="tr-power-bar-container">
+            <div id="tr-power-bar-label">LỰC SÚT</div>
+            <div id="tr-power-bar-fill"></div>
+        </div>
+
+        <!-- Gợi ý điều khiển -->
+        <div id="tr-controls-hint">
+            ← → ↑ ↓ : di chuyển &nbsp;|&nbsp; Giữ D : sút bóng (giữ lâu = mạnh) &nbsp;|&nbsp; A : xoạc bóng
+        </div>
+
+        <!-- Nhân vật Noxx -->
+        <div class="tr-player-group" id="tr-group-noxx">
+            <img class="tr-player-sprite" id="tr-sprite-noxx" src="../../assets/images/penalty/training/2-noxx.png" alt="Noxx" />
+            <img class="tr-player-ball"   id="tr-ball-noxx"   src="../../assets/images/penalty/training/2-ball.png" alt="Bóng Noxx" />
+        </div>
+
+        <!-- Nhân vật Xeali -->
+        <div class="tr-player-group" id="tr-group-xeali">
+            <img class="tr-player-sprite" id="tr-sprite-xeali" src="../../assets/images/penalty/training/2-xeali.png" alt="Xeali" />
+            <img class="tr-player-ball"   id="tr-ball-xeali"   src="../../assets/images/penalty/training/2-ball.png" alt="Bóng Xeali" />
+        </div>
+
+        <!-- Nhân vật Lyron -->
+        <div class="tr-player-group" id="tr-group-lyron">
+            <img class="tr-player-sprite" id="tr-sprite-lyron" src="../../assets/images/penalty/training/2-lyron.png" alt="Lyron" />
+            <img class="tr-player-ball"   id="tr-ball-lyron"   src="../../assets/images/penalty/training/2-ball.png" alt="Bóng Lyron" />
+        </div>
+
+    </div><!-- /screenTraining -->
 
     <!-- ============ RESULT SCREEN ============ -->
     <div class="screen hidden" id="screenResult">
@@ -198,8 +258,6 @@
 
 </div>
 <script src="js/penalty.js"></script>
-<script src="../../js/wallet.js"></script>
-<script src="../../js/profile.js"></script>
 <script>
     // Chặn Ctrl+Scroll zoom (desktop)
     window.addEventListener('wheel', function(e) {

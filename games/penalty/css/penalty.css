@@ -247,7 +247,6 @@ html, body {
     opacity: 0; transition: opacity 0.18s ease-in-out; pointer-events: none;
 }
 .keeper-img.active { opacity: 1; }
-/* 9 tư thế riêng biệt — mỗi tư thế có kích thước độc lập */
 .keeper.pose-up         { width: 250px; height: 560px; }
 .keeper.pose-down       { width: 300px; height: 260px; }
 .keeper.pose-left       { width: 400px; height: 300px; }
@@ -268,12 +267,10 @@ html, body {
     pointer-events: none;
 }
 .ball img { width: 100%; height: 100%; object-fit: contain; }
-/* .ball.flying size is controlled by JS perspective scaling */
-.ball.flying { /* no fixed override — JS sets width/height dynamically */ }
+.ball.flying { /* size controlled by JS */ }
 .ball.ball-emoji::after { content: '⚽'; font-size: 2rem; display: block; }
-/* Bóng nảy squash — transform được inject inline bởi JS */
 
-/* ── SHOOTER — 3-phase sprite animation ── */
+/* ── SHOOTER ── */
 .shooter-sprite {
     position: absolute; bottom: 0; left: 40%;
     transform: translateX(-52%);
@@ -285,7 +282,6 @@ html, body {
 .shooter-sprite img { width: 100%; height: 100%; object-fit: contain; object-position: bottom; }
 .shooter-sprite.shooter-emoji::after { content: '🧑'; font-size: 5rem; display: block; }
 
-/* Phase 1 — chạy đà (shooter-2): cầu thủ bước tới, nghiêng người */
 .shooter-sprite.runup { animation: shooterRunup 0.38s cubic-bezier(.3,0,.55,1) forwards; }
 @keyframes shooterRunup {
     0%   { transform: translateX(-52%) translateY(0px)   rotate(0deg)   scaleX(1);    }
@@ -294,8 +290,6 @@ html, body {
     80%  { transform: translateX(calc(-52% + 48px)) translateY(-3px)  rotate(-12deg) scaleX(1.04); }
     100% { transform: translateX(calc(-52% + 44px)) translateY(2px)   rotate(-8deg)  scaleX(1.03); }
 }
-
-/* Phase 2 — chân chạm bóng (shooter-3): xoay mạnh, squash & stretch */
 .shooter-sprite.kicking { animation: shooterKick 0.22s cubic-bezier(.15,1.8,.5,1) forwards; }
 @keyframes shooterKick {
     0%   { transform: translateX(calc(-52% + 44px)) translateY(2px)   rotate(-8deg)  scaleX(1.03) scaleY(1);    }
@@ -303,8 +297,6 @@ html, body {
     65%  { transform: translateX(calc(-52% + 52px)) translateY(-8px)  rotate(-16deg) scaleX(0.97) scaleY(1.05); }
     100% { transform: translateX(calc(-52% + 42px)) translateY(0px)   rotate(-6deg)  scaleX(1)    scaleY(1);    }
 }
-
-/* Phase 3 — impact: bounce back sau cú sút */
 .shooter-sprite.impact { animation: shooterImpact 0.38s cubic-bezier(.25,.46,.45,.94) forwards; }
 @keyframes shooterImpact {
     0%   { transform: translateX(calc(-52% + 42px)) translateY(0px)  rotate(-6deg); }
@@ -313,7 +305,6 @@ html, body {
     100% { transform: translateX(-52%) translateY(0px)                rotate(0deg);  }
 }
 
-/* Screen shake khi bóng rời chân */
 @keyframes screenShake {
     0%   { transform: translate(0, 0)      rotate(0deg);    }
     12%  { transform: translate(-6px, -4px) rotate(-0.4deg); }
@@ -347,7 +338,7 @@ html, body {
     to   { transform: translate(-50%,-50%) scale(1);   opacity: 1; }
 }
 
-/* ── ACTION HINT — floating transparent bottom bar ── */
+/* ── ACTION HINT ── */
 .action-panel {
     position: absolute;
     bottom: 0; left: 0; right: 0;
@@ -367,12 +358,11 @@ html, body {
 }
 
 /* ════════════════════════════════════════
-   POWER BAR + ARROW CONTROLS — transparent overlay
-   Positioned at bottom of screen, above action hint
+   POWER BAR + ARROW CONTROLS
 ════════════════════════════════════════ */
 #powerBarWrap {
     position: absolute;
-    bottom: 36px;          /* above action hint text */
+    bottom: 36px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -382,20 +372,17 @@ html, body {
     z-index: 25;
     pointer-events: auto;
     transition: opacity 0.2s;
-    /* fully transparent — no background */
     background: transparent;
     padding: 0;
 }
 #powerBarWrap.hidden { display: none; }
 
-/* Power bar row */
 .power-row {
     display: flex;
     align-items: center;
     gap: 10px;
     width: min(440px, 90vw);
 }
-
 .power-key-hint {
     font-family: 'Bebas Neue', cursive;
     font-size: 0.72rem; letter-spacing: 2px;
@@ -403,7 +390,6 @@ html, body {
     white-space: nowrap; flex-shrink: 0;
     text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
-
 .power-bar-track {
     flex: 1; height: 12px;
     background: rgba(0,0,0,0.35);
@@ -412,7 +398,6 @@ html, body {
     overflow: hidden; position: relative;
     backdrop-filter: blur(4px);
 }
-/* Danger zone marker at 85% */
 .power-bar-track::after {
     content: '';
     position: absolute; right: 15%; top: 0; bottom: 0;
@@ -432,7 +417,6 @@ html, body {
     background: linear-gradient(180deg, rgba(255,255,255,0.28) 0%, transparent 60%);
     border-radius: 6px;
 }
-
 #powerBarLabel {
     font-family: 'Bebas Neue', cursive;
     font-size: 0.75rem; letter-spacing: 2px;
@@ -451,21 +435,17 @@ html, body {
     to   { box-shadow: 0 0 0 3px rgba(245,197,24,0.5); }
 }
 
-/* Control row: arrow pad + direction indicator + shoot button */
 .control-row {
     display: flex;
     align-items: center;
     gap: 14px;
 }
-
-/* ── 3×3 arrow pad — all 8 directions + center ── */
 .arrow-pad {
     display: grid;
     grid-template-columns: repeat(3, 34px);
     grid-template-rows:    repeat(3, 34px);
     gap: 3px;
 }
-
 .arrow-btn {
     width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
@@ -482,8 +462,6 @@ html, body {
     font-family: sans-serif;
     text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
-
-/* Grid placement — all 8 directions */
 .arrow-btn[data-dir="up"]         { grid-column: 2; grid-row: 1; }
 .arrow-btn[data-dir="up-left"]    { grid-column: 1; grid-row: 1; }
 .arrow-btn[data-dir="up-right"]   { grid-column: 3; grid-row: 1; }
@@ -492,8 +470,6 @@ html, body {
 .arrow-btn[data-dir="down-left"]  { grid-column: 1; grid-row: 3; }
 .arrow-btn[data-dir="down"]       { grid-column: 2; grid-row: 3; }
 .arrow-btn[data-dir="down-right"] { grid-column: 3; grid-row: 3; }
-
-/* Center indicator */
 .arrow-center {
     grid-column: 2; grid-row: 2;
     display: flex; align-items: center; justify-content: center;
@@ -501,7 +477,6 @@ html, body {
     color: rgba(255,255,255,0.5);
     text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
-
 .arrow-btn:hover {
     background: rgba(255,255,255,0.18);
     border-color: rgba(255,255,255,0.4);
@@ -514,8 +489,6 @@ html, body {
     box-shadow: 0 0 12px rgba(245,197,24,0.6);
     text-shadow: none;
 }
-
-/* Shoot button (mobile) */
 #shootBtn {
     width: 60px; height: 104px;
     border-radius: 8px;
@@ -536,8 +509,6 @@ html, body {
 #shootBtn:active,
 #shootBtn.pressed { background: rgba(245,197,24,0.3); transform: scale(0.95); }
 #shootBtn .shoot-icon { font-size: 1.7rem; line-height: 1; }
-
-/* On desktop, hide shoot button */
 @media (hover: hover) and (pointer: fine) {
     #shootBtn { display: none; }
     .control-row { gap: 10px; }
@@ -550,8 +521,6 @@ html, body {
     justify-content: center;
     overflow: hidden;
 }
-
-/* Real div background — works on file:// */
 .result-bg {
     position: absolute; inset: 0; z-index: 0;
     background-size: cover;
@@ -564,15 +533,12 @@ html, body {
 #screenResult:not(.hidden) .result-bg {
     transform: scale(1);
 }
-
-/* dark vignette */
 .result-vignette {
     position: absolute; inset: 0; z-index: 1;
     background:
         radial-gradient(ellipse 80% 60% at 50% 110%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%),
         linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.6) 100%);
 }
-
 .result-card {
     position: relative; z-index: 2;
     display: flex; flex-direction: column; align-items: center; gap: 16px;
@@ -588,19 +554,17 @@ html, body {
     from { transform: translateY(36px) scale(0.88); opacity: 0; }
     to   { transform: translateY(0) scale(1); opacity: 1; }
 }
-
-/* ketqua.png shown INSIDE the card as a banner */
 .result-img-wrap {
     width: 320px; max-height: 130px;
     display: flex; align-items: center; justify-content: center;
     margin-bottom: 2px;
+    display: none; /* ketqua.png is full background */
 }
 .result-img {
     max-width: 100%; max-height: 130px;
     object-fit: contain; border-radius: 8px;
     filter: drop-shadow(0 6px 24px rgba(0,0,0,0.7));
 }
-
 .result-trophy {
     font-size: 4rem; line-height: 1;
     animation: bounceIn 0.6s cubic-bezier(.34,1.56,.64,1) 0.15s both;
@@ -610,7 +574,6 @@ html, body {
     from { transform: scale(0) rotate(-25deg); opacity: 0; }
     to   { transform: scale(1) rotate(0deg); opacity: 1; }
 }
-
 .result-title {
     font-family: 'Bebas Neue', cursive;
     font-size: clamp(3rem, 8vw, 4.2rem);
@@ -622,7 +585,6 @@ html, body {
     from { text-shadow: 0 0 30px rgba(245,197,24,0.5), 0 4px 0 rgba(0,0,0,0.8); }
     to   { text-shadow: 0 0 80px rgba(245,197,24,0.95), 0 4px 0 rgba(0,0,0,0.8), 0 0 120px rgba(245,197,24,0.4); }
 }
-
 .result-score-wrap {
     display: flex; align-items: center; gap: 18px;
     background: rgba(255,255,255,0.05);
@@ -640,11 +602,6 @@ html, body {
     letter-spacing: 6px; line-height: 1;
     text-shadow: 0 2px 12px rgba(0,0,0,0.8);
 }
-
-/* ketqua.png là full background rồi — ẩn banner trong card */
-.result-img-wrap { display: none; }
-
-
 .result-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
 .rbtn {
     padding: 12px 26px; font-family: 'Bebas Neue', cursive;
@@ -660,3 +617,226 @@ html, body {
 .rbtn-menu:hover { box-shadow: 0 8px 32px rgba(29,128,224,0.5); }
 .rbtn-lobby { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.15); }
 .rbtn-lobby:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+
+/* ════════════════════════════════════════
+   TRAINING SCREEN
+════════════════════════════════════════ */
+#screenTraining {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #1a3a1a;
+}
+
+#tr-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+/* ── Player groups ── */
+.tr-player-group {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+.tr-player-sprite {
+    width: 455px;
+    height: 455px;
+    object-fit: contain;
+    object-position: bottom center;
+    image-rendering: pixelated;
+}
+
+.tr-player-sprite.xoac-pose {
+    transform: translateY(30px);
+}
+
+.tr-player-ball {
+    width: 116px;
+    height: auto;
+    margin-top: -100px;
+    animation:
+        tr-ball-bounce 0.35s ease-in-out infinite alternate,
+        tr-ball-roll   0.35s linear infinite;
+    transform-origin: center center;
+}
+
+@keyframes tr-ball-bounce {
+    from { transform: translateY(0px);   }
+    to   { transform: translateY(-10px); }
+}
+@keyframes tr-ball-roll {
+    from { transform: rotate(0deg);   }
+    to   { transform: rotate(360deg); }
+}
+
+.tr-shot-ball {
+    position: fixed;
+    width: 116px;
+    height: auto;
+    display: none;
+    image-rendering: pixelated;
+    pointer-events: none;
+    z-index: 20;
+}
+
+/* ── Character select thumbnails ── */
+#tr-character-select {
+    position: absolute;
+    top: 56px; /* below lobby button */
+    right: 16px;
+    display: flex;
+    gap: 10px;
+    z-index: 50;
+}
+
+.tr-char-thumb {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    border: 3px solid rgba(255,255,255,0.4);
+    background: rgba(0,0,0,0.35);
+    cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    transition: border-color 0.15s, transform 0.15s;
+}
+.tr-char-thumb:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255,255,255,0.8);
+}
+.tr-char-thumb.active {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255,215,0,0.7);
+}
+.tr-char-thumb img {
+    width: 140px;
+    transform: scale(0.25) translateY(-15%);
+    transform-origin: bottom center;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+/* ── Power bar (training) ── */
+#tr-power-bar-container {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+    height: 22px;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: 12px;
+    overflow: hidden;
+    display: none;
+    z-index: 50;
+}
+#tr-power-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4caf50, #ffeb3b, #f44336);
+    transition: width 0.05s linear;
+}
+#tr-power-bar-label {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    white-space: nowrap;
+}
+
+/* ── Controls hint (training) ── */
+#tr-controls-hint {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px;
+    background: rgba(0,0,0,0.35);
+    padding: 8px 12px;
+    border-radius: 8px;
+    line-height: 1.5;
+    z-index: 50;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* ── LED Banner (training) ── */
+#tr-led-banner {
+    position: absolute;
+    top: 30.3%;
+    left: 0;
+    width: 100%;
+    height: 88px;
+    background: #000;
+    overflow: hidden;
+    z-index: 5;
+    border-top: 3px solid #111;
+    border-bottom: 3px solid #111;
+    display: flex;
+    align-items: center;
+}
+#tr-led-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    will-change: transform;
+}
+.tr-led-char {
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    font-size: 82px;
+    font-weight: 500;
+    letter-spacing: 18px;
+    padding: 0 4px;
+    text-shadow:
+        0 0 4px #fff,
+        0 0 8px #fff,
+        0 0 14px currentColor,
+        0 0 28px currentColor,
+        0 0 50px currentColor,
+        0 0 80px currentColor,
+        0 0 120px currentColor;
+    filter: brightness(1.6) saturate(1.4);
+}
+.tr-led-dot-row {
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.07) 0px,
+        rgba(255,255,255,0.07) 5px,
+        transparent 5px,
+        transparent 10px
+    );
+    pointer-events: none;
+}
+.tr-led-scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,0.18) 0px,
+        rgba(0,0,0,0.18) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    pointer-events: none;
+}
