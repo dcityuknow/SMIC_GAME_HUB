@@ -247,3 +247,8 @@ html, body {
     );
     pointer-events: none;
 }
+/* Thêm vào cuối file training.css */
+#tr-sprite-rocky {
+    width: 666px;   /* tăng từ 455px lên, chỉnh số này */
+    height: 666px;
+}
