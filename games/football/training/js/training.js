@@ -33,6 +33,8 @@ const TR_CHARACTERS = [
     { id:'noxx',  idle: TR_IMG('2-noxx.png'),         run: TR_IMG('2-noxx-running.png'),  shoot: TR_IMG('2-noxx-shoot.png'),  xoac: TR_IMG('2-noxx-xoac.png'),  startDir: 1,  speed: 8  },
     { id:'xeali', idle: TR_IMG('2-xeali.png'),        run: TR_IMG('2-xeali-running.png'), shoot: TR_IMG('2-xeali-shoot.png'), xoac: TR_IMG('2-xeali-xoac.png'), startDir: -1, speed: 6  },
     { id:'lyron', idle: TR_IMG('2-lyron.png'),        run: TR_IMG('2-lyron-running.png'),  shoot: TR_IMG('2-lyron-shoot.png'), xoac: TR_IMG('2-lyron-xoac.png'), startDir: 1,  speed: 10 },
+    { id:'rocky', idle: TR_IMG('rocky.png'),           run: TR_IMG('rocky1.png'),           shoot: TR_IMG('rocky-shoot.png'),   xoac: TR_IMG('rocky-xoac.png'),   startDir: 1,  speed: 9,
+      runFrames: [TR_IMG('rocky1.png'), TR_IMG('rocky2.png'), TR_IMG('rocky3.png'), TR_IMG('rocky4.png')] },
 ];
 
 let trPlayers = [];
@@ -186,8 +188,13 @@ function trShakeScreen(intensity, duration) {
 
 function trFlipSprite(p) {
     if (p.isShooting || p.isXoac) return;
-    p.spriteFrame = 1 - p.spriteFrame;
-    trSetSpritePose(p, p.spriteFrame === 0 ? p.cfg.idle : p.cfg.run, false);
+    if (p.cfg.runFrames) {
+        p.spriteFrame = (p.spriteFrame + 1) % p.cfg.runFrames.length;
+        trSetSpritePose(p, p.cfg.runFrames[p.spriteFrame], false);
+    } else {
+        p.spriteFrame = 1 - p.spriteFrame;
+        trSetSpritePose(p, p.spriteFrame === 0 ? p.cfg.idle : p.cfg.run, false);
+    }
 }
 
 function trDoXoac(p, targetBall, targetState) {
@@ -248,8 +255,13 @@ function trStartIntruderRunAnim(ip) {
     trSetSpritePose(ip, ip.cfg.idle, false);
     trIntruder.spriteInterval = setInterval(() => {
         if (!trIntruder.active || trIntruder.phase === 'tackling') return;
-        trIntruder.spriteFrame = 1 - trIntruder.spriteFrame;
-        trSetSpritePose(ip, trIntruder.spriteFrame === 0 ? ip.cfg.idle : ip.cfg.run, false);
+        if (ip.cfg.runFrames) {
+            trIntruder.spriteFrame = (trIntruder.spriteFrame + 1) % ip.cfg.runFrames.length;
+            trSetSpritePose(ip, ip.cfg.runFrames[trIntruder.spriteFrame], false);
+        } else {
+            trIntruder.spriteFrame = 1 - trIntruder.spriteFrame;
+            trSetSpritePose(ip, trIntruder.spriteFrame === 0 ? ip.cfg.idle : ip.cfg.run, false);
+        }
     }, TR_SPRITE_MS);
 }
 
