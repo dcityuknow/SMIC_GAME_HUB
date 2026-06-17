@@ -546,7 +546,7 @@ function endGame() {
 // ── NAV ─────────────────────────────────────────────────
 function rematch()  { startGame(); }
 function goMode()   { window.location.href = '../index.html'; }
-function goLobby()  { window.location.href = '../../index.html'; }
+function goLobby()  { window.location.href = '../../football/index.html'; }
 
 // ── BOOT ────────────────────────────────────────────────
 startGame();

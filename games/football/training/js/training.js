@@ -655,7 +655,7 @@ function initTraining() {
 }
 
 // ── NAV ─────────────────────────────────────────────────
-function goLobby() { stopTraining(); window.location.href = '../../index.html'; }
+function goLobby() { stopTraining(); window.location.href = '../../football/index.html'; }
 
 // ── BOOT ────────────────────────────────────────────────
 initTraining();
