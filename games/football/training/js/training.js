@@ -4,7 +4,7 @@
 // TRAINING MODE
 // ════════════════════════════════════════════════════════
 
-const TR_IMG = p => `../../assets/images/penalty/training/${p}`;
+const TR_IMG = p => `../../../assets/images/penalty/training/${p}`;
 
 const TR_SPEED            = 8;
 const TR_SPRITE_MS        = 350;
