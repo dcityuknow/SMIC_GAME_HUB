@@ -70,86 +70,121 @@ function stopTraining() {
 
 // ── LED banner ─────────────────────────────────────────
 let trLedRAF = null;
+let trLedTimeout = null;
 function trStopLED() {
-    if (trLedRAF) { cancelAnimationFrame(trLedRAF); trLedRAF = null; }
+    if (trLedRAF)     { cancelAnimationFrame(trLedRAF); trLedRAF = null; }
+    if (trLedTimeout) { clearTimeout(trLedTimeout); trLedTimeout = null; }
 }
 
 function trInitLED() {
     trStopLED();
-    const SEGMENTS = [
-        { text: 'SEISMIC',    color: null },
-        { text: '  ✦  ',     color: '#ffffff' },
-        { text: 'Encrypted',  color: '#00ffee' },
-        { text: '  ✦  ',     color: '#ffffff' },
-        { text: 'Privacy',    color: '#ff00cc' },
-        { text: '  ✦  ',     color: '#ffffff' },
-    ];
-    const RANDOM_COLORS = ['#ff0040','#ff4400','#ffaa00','#ffee00','#00ffcc','#00aaff','#aa00ff','#ff00aa'];
-    const SCROLL_SPEED = 1.6;
-    const REPEAT = 6;
-    const track = document.getElementById('tr-led-track');
-    let charMeta = [];
 
-    function buildTrack() {
+    // Danh sách các mục hiển thị lần lượt
+    const LED_ITEMS = [
+        { text: 'SEISMIC',    color: null       },   // màu ngẫu nhiên
+        { text: 'Encrypted',  color: '#00ffee'  },
+        { text: 'Privacy',    color: '#ff00cc'  },
+        { text: 'KengSiro',   color: '#ffdd00'  },
+    ];
+    const RANDOM_COLORS   = ['#ff0040','#ff4400','#ffaa00','#ffee00','#00ffcc','#00aaff','#aa00ff','#ff00aa'];
+    const SCROLL_SPEED    = 2.2;   // px/frame khi chạy ngang
+    const SCROLL_DURATION = 5000;  // ms chạy ngang
+    const BLINK_DURATION  = 2000;  // ms nhấp nháy sau khi chạy xong
+    const BLINK_HZ        = 220;   // ms mỗi nhịp nhấp nháy
+
+    const track = document.getElementById('tr-led-track');
+    let currentItem = 0;
+
+    // ── Xây dựng track cho 1 mục (lặp đủ để lấp đầy màn hình) ──
+    function buildTrack(item) {
         track.innerHTML = '';
-        charMeta = [];
+        track.style.transform = 'translateX(0px)';
+        // Lặp lại text nhiều lần để không bao giờ thấy khoảng trống
+        const REPEAT = 10;
         for (let r = 0; r < REPEAT; r++) {
-            SEGMENTS.forEach((seg, segIdx) => {
-                for (const ch of seg.text) {
-                    const span = document.createElement('span');
-                    span.className = 'tr-led-char';
-                    span.textContent = ch;
-                    track.appendChild(span);
-                    charMeta.push(segIdx);
-                }
-            });
+            for (const ch of ('  ' + item.text + '  ')) {
+                const span = document.createElement('span');
+                span.className = 'tr-led-char';
+                span.textContent = ch;
+                track.appendChild(span);
+            }
         }
     }
-    buildTrack();
 
-    let unitWidth = 0;
-    function measureUnit() {
-        const fullLen = SEGMENTS.reduce((a, s) => a + s.text.length, 0);
+    // ── Tính chiều rộng 1 lần lặp ──
+    function measureUnit(item) {
+        const len = ('  ' + item.text + '  ').length;
         let w = 0;
         const children = track.children;
-        for (let i = 0; i < fullLen && i < children.length; i++) w += children[i].offsetWidth;
-        unitWidth = w || 400;
+        for (let i = 0; i < len && i < children.length; i++) w += children[i].offsetWidth;
+        return w || 600;
     }
 
-    const colorState = [];
-    function initColorState() {
-        colorState.length = 0;
-        for (let i = 0; i < track.children.length; i++) {
-            colorState.push({ colorIdx: Math.floor(Math.random() * RANDOM_COLORS.length), phase: Math.random() * Math.PI * 2, speed: 0.018 + Math.random() * 0.022 });
-        }
-    }
-    initColorState();
-
-    let offset = 0, frame = 0;
-    function animLED() {
-        if (!trRunning) return;
-        frame++;
-        offset += SCROLL_SPEED;
-        if (unitWidth > 0 && offset >= unitWidth) offset -= unitWidth;
-        track.style.transform = 'translateX(' + (-offset) + 'px)';
+    // ── Tô màu cho tất cả ký tự ──
+    function colorize(item, opacity) {
         const children = track.children;
+        const baseColor = item.color;
         for (let i = 0; i < children.length; i++) {
-            const s = colorState[i];
-            s.phase += s.speed;
-            const bright = 0.75 + 0.25 * Math.sin(s.phase);
-            const seg = SEGMENTS[charMeta[i]];
             let col;
-            if (seg && seg.color) { col = seg.color; }
-            else {
-                if (frame % 80 === (i * 13) % 80) s.colorIdx = (s.colorIdx + 1) % RANDOM_COLORS.length;
-                col = RANDOM_COLORS[s.colorIdx];
+            if (baseColor) {
+                col = baseColor;
+            } else {
+                col = RANDOM_COLORS[Math.floor((i * 7 + Math.floor(Date.now() / 120)) % RANDOM_COLORS.length)];
             }
             children[i].style.color   = col;
-            children[i].style.opacity = bright.toFixed(2);
+            children[i].style.opacity = opacity.toFixed(2);
         }
-        trLedRAF = requestAnimationFrame(animLED);
     }
-    requestAnimationFrame(() => { measureUnit(); trLedRAF = requestAnimationFrame(animLED); });
+
+    // ── Phase 1: chạy ngang 5 giây ──
+    function phaseScroll(item) {
+        buildTrack(item);
+        const unitWidth = measureUnit(item);
+        let offset = 0;
+        const startTime = Date.now();
+
+        function frame() {
+            if (!trRunning) return;
+            const elapsed = Date.now() - startTime;
+            if (elapsed >= SCROLL_DURATION) {
+                // Dừng cuộn, chuyển sang nhấp nháy
+                phaseBlink(item);
+                return;
+            }
+            offset += SCROLL_SPEED;
+            if (offset >= unitWidth) offset -= unitWidth;
+            track.style.transform = 'translateX(' + (-offset) + 'px)';
+            colorize(item, 0.85 + 0.15 * Math.sin(Date.now() / 200));
+            trLedRAF = requestAnimationFrame(frame);
+        }
+        trLedRAF = requestAnimationFrame(frame);
+    }
+
+    // ── Phase 2: nhấp nháy 2 giây rồi chuyển mục tiếp ──
+    function phaseBlink(item) {
+        const startTime = Date.now();
+        let blinkOn = true;
+
+        function blink() {
+            if (!trRunning) return;
+            const elapsed = Date.now() - startTime;
+            if (elapsed >= BLINK_DURATION) {
+                // Chuyển sang mục tiếp theo
+                currentItem = (currentItem + 1) % LED_ITEMS.length;
+                phaseScroll(LED_ITEMS[currentItem]);
+                return;
+            }
+            blinkOn = !blinkOn;
+            colorize(item, blinkOn ? 1 : 0);
+            trLedTimeout = setTimeout(blink, BLINK_HZ);
+        }
+        trLedTimeout = setTimeout(blink, BLINK_HZ);
+    }
+
+    // ── Bắt đầu ──
+    requestAnimationFrame(() => {
+        phaseScroll(LED_ITEMS[currentItem]);
+    });
 }
 
 // ── Helpers ─────────────────────────────────────────────

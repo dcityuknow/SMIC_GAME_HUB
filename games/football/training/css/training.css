@@ -34,6 +34,7 @@ html, body {
     inset: 0;
     overflow: hidden;
     background: #1a3a1a;
+    isolation: isolate;  /* tạo stacking context riêng, LED z-index:-1 sẽ nằm sau background nhưng vẫn trong screen */
 }
 
 #tr-background {
@@ -191,7 +192,7 @@ html, body {
     height: 88px;
     background: #000;
     overflow: hidden;
-    z-index: 5;
+    z-index: -1;       /* nằm sau tất cả, kể cả background */
     border-top: 3px solid #111;
     border-bottom: 3px solid #111;
     display: flex;
