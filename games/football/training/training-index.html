@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Training – Penalty Shootout – SMIC GAME</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/training.css">
+</head>
+<body>
+<div class="game-wrap" id="gameWrap">
+
+    <button class="lobby-btn" onclick="goLobby()">← LOBBY</button>
+
+    <!-- ============ TRAINING SCREEN ============ -->
+    <div id="screenTraining">
+
+        <!-- Background sân -->
+        <img id="tr-background" src="../../../assets/images/penalty/training/Background - test.png" alt="Sân bóng" />
+
+        <!-- Băng rôn LED -->
+        <div id="tr-led-banner">
+            <div id="tr-led-track"></div>
+            <div class="tr-led-dot-row"></div>
+            <div class="tr-led-scanline"></div>
+        </div>
+
+        <!-- Chọn nhân vật -->
+        <div id="tr-character-select">
+            <div class="tr-char-thumb active" data-id="noxx">
+                <img src="../../../assets/images/penalty/training/2-noxx.png" alt="Noxx" />
+            </div>
+            <div class="tr-char-thumb" data-id="xeali">
+                <img src="../../../assets/images/penalty/training/2-xeali.png" alt="Xeali" />
+            </div>
+            <div class="tr-char-thumb" data-id="lyron">
+                <img src="../../../assets/images/penalty/training/2-lyron.png" alt="Lyron" />
+            </div>
+        </div>
+
+        <!-- Thanh lực sút -->
+        <div id="tr-power-bar-container">
+            <div id="tr-power-bar-label">LỰC SÚT</div>
+            <div id="tr-power-bar-fill"></div>
+        </div>
+
+        <!-- Gợi ý điều khiển -->
+        <div id="tr-controls-hint">
+            ← → ↑ ↓ : di chuyển &nbsp;|&nbsp; Giữ D : sút bóng (giữ lâu = mạnh) &nbsp;|&nbsp; A : xoạc bóng
+        </div>
+
+        <!-- Nhân vật Noxx -->
+        <div class="tr-player-group" id="tr-group-noxx">
+            <img class="tr-player-sprite" id="tr-sprite-noxx" src="../../../assets/images/penalty/training/2-noxx.png" alt="Noxx" />
+            <img class="tr-player-ball"   id="tr-ball-noxx"   src="../../../assets/images/penalty/training/2-ball.png" alt="Bóng Noxx" />
+        </div>
+
+        <!-- Nhân vật Xeali -->
+        <div class="tr-player-group" id="tr-group-xeali">
+            <img class="tr-player-sprite" id="tr-sprite-xeali" src="../../../assets/images/penalty/training/2-xeali.png" alt="Xeali" />
+            <img class="tr-player-ball"   id="tr-ball-xeali"   src="../../../assets/images/penalty/training/2-ball.png" alt="Bóng Xeali" />
+        </div>
+
+        <!-- Nhân vật Lyron -->
+        <div class="tr-player-group" id="tr-group-lyron">
+            <img class="tr-player-sprite" id="tr-sprite-lyron" src="../../../assets/images/penalty/training/2-lyron.png" alt="Lyron" />
+            <img class="tr-player-ball"   id="tr-ball-lyron"   src="../../../assets/images/penalty/training/2-ball.png" alt="Bóng Lyron" />
+        </div>
+
+    </div><!-- /screenTraining -->
+
+</div>
+<script src="js/training.js"></script>
+<script>
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+            e.preventDefault();
+        }
+    });
+</script>
+</body>
+</html>

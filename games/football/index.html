@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Penalty Shootout – SMIC GAME</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/mode.css">
+</head>
+<body>
+<div class="game-wrap" id="gameWrap">
+
+    <button class="lobby-btn" onclick="goLobby()">← LOBBY</button>
+
+    <div class="screen" id="screenMode">
+        <div class="mode-bg">
+            <img src="../../assets/images/penalty/Background.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
+        </div>
+        <div class="mode-overlay"></div>
+        <div class="title-block">
+            <div class="title-league">SMIC GAME HUB</div>
+            <h1 class="title-main">PENALTY<br><em>SHOOTOUT</em></h1>
+            <p class="title-sub">5 rounds · pick your side</p>
+        </div>
+        <div class="mode-cards">
+            <a class="mode-card" href="shooter/shooter-index.html">
+                <div class="card-num">01</div>
+                <div class="card-icon">⚽</div>
+                <h2>SHOOTER</h2>
+                <p>Chọn góc trên khung thành để sút</p>
+                <div class="card-cta">SELECT →</div>
+            </a>
+            <a class="mode-card" href="keeper/keeper-index.html">
+                <div class="card-num">02</div>
+                <div class="card-icon">🧤</div>
+                <h2>GOALKEEPER</h2>
+                <p>Chọn góc trên khung thành để nhảy chặn</p>
+                <div class="card-cta">SELECT →</div>
+            </a>
+            <a class="mode-card" href="training/training-index.html">
+                <div class="card-num">03</div>
+                <div class="card-icon">🏃</div>
+                <h2>TRAINING</h2>
+                <p>Rê bóng tự do, luyện kỹ năng cùng nhân vật</p>
+                <div class="card-cta">SELECT →</div>
+            </a>
+        </div>
+    </div>
+
+</div>
+<script>
+    function goLobby() { window.location.href = '../index.html'; }
+
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('touchmove', function(e) {
+        if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+            e.preventDefault();
+        }
+    });
+</script>
+</body>
+</html>

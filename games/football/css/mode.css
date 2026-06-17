@@ -1,0 +1,104 @@
+:root {
+    --gold:  #f5c518;
+    --red:   #e63946;
+    --blue:  #1d80e0;
+    --green: #4ade80;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    font-family: 'Rajdhani', sans-serif;
+    background: #000;
+    width: 100%; height: 100%;
+    overflow: hidden;
+}
+
+.game-wrap {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+}
+
+.screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.lobby-btn {
+    position: fixed; top: 14px; left: 14px;
+    padding: 7px 16px;
+    font-family: 'Bebas Neue', cursive; font-size: 14px; letter-spacing: 2px;
+    color: rgba(255,255,255,0.85);
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 4px; cursor: pointer; z-index: 500;
+    backdrop-filter: blur(6px);
+    transition: all 0.2s;
+}
+.lobby-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* ════════════════════════════════════════
+   MODE SELECT
+════════════════════════════════════════ */
+.mode-bg {
+    position: absolute; inset: 0;
+    background-image: url('../assets/images/penalty/background.png');
+    background-size: cover;
+    background-position: center center;
+    z-index: 0;
+}
+.mode-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 90% 70% at 50% 100%, #0d4a1a 0%, #06111e 55%);
+    z-index: -1;
+}
+.mode-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg,
+        rgba(0,0,0,0.5) 0%, rgba(6,17,30,0.4) 50%, rgba(0,0,0,0.7) 100%);
+    z-index: 1;
+}
+.title-block, .mode-cards { position: relative; z-index: 2; }
+
+.title-league {
+    font-family: 'Bebas Neue', cursive; font-size: 0.85rem;
+    letter-spacing: 7px; color: var(--gold); opacity: 0.9; text-align: center;
+}
+.title-main {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(4rem, 13vw, 9rem);
+    color: #fff; text-align: center; line-height: 0.9;
+    letter-spacing: 4px;
+    text-shadow: 0 4px 0 #000, 0 0 80px rgba(245,197,24,0.3);
+}
+.title-main em { font-style: normal; color: var(--gold); }
+.title-sub {
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 5px;
+    color: rgba(255,255,255,0.45); text-transform: uppercase; text-align: center;
+}
+.title-block { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-bottom: 36px; }
+
+.mode-cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+.mode-card {
+    width: 210px; padding: 28px 20px 22px;
+    border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);
+    cursor: pointer; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 9px;
+    background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), border-color 0.2s, background 0.2s;
+    position: relative; overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+}
+.mode-card:hover { transform: translateY(-7px) scale(1.03); border-color: var(--gold); background: rgba(245,197,24,0.07); }
+.card-num { position: absolute; top: 10px; right: 14px; font-family: 'Bebas Neue', cursive; font-size: 2rem; color: rgba(255,255,255,0.06); }
+.card-icon { font-size: 2.8rem; }
+.mode-card h2 { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 3px; color: #fff; }
+.mode-card p  { font-size: 0.78rem; color: rgba(255,255,255,0.5); font-weight: 600; line-height: 1.5; }
+.card-cta { margin-top: 8px; font-family: 'Bebas Neue', cursive; font-size: 0.85rem; letter-spacing: 3px; color: var(--gold); }
