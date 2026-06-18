@@ -1,19 +1,5 @@
 'use strict';
 
-// ── INJECT goalkeeper2 img if not in HTML ───────────────
-(function() {
-    if (!document.getElementById('keeperStand2')) {
-        const keeperEl = document.getElementById('keeper');
-        if (keeperEl) {
-            const img = document.createElement('img');
-            img.className = 'keeper-img';
-            img.id = 'keeperStand2';
-            img.src = '../../assets/images/penalty/goalkeeper2.png';
-            img.alt = 'GK2';
-            keeperEl.insertBefore(img, keeperEl.querySelector('#keeperUp'));
-        }
-    }
-})();
 
 // ── CONFIG ──────────────────────────────────────────────
 const TOTAL_ROUNDS = 5;
