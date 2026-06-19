@@ -48,6 +48,7 @@ let trLastActiveY = null;
 let trShakeTimer  = null;
 let trLoopRAF     = null;
 let trSpriteInterval = null;
+let trBgInterval  = null;
 let trRunning = false;
 
 const trIntruder = {
@@ -60,6 +61,7 @@ function stopTraining() {
     trRunning = false;
     if (trLoopRAF)        { cancelAnimationFrame(trLoopRAF); trLoopRAF = null; }
     if (trSpriteInterval) { clearInterval(trSpriteInterval); trSpriteInterval = null; }
+    if (trBgInterval)     { clearInterval(trBgInterval);     trBgInterval = null; }
     trStopIntruderAnim();
     document.removeEventListener('keydown', trOnKeyDown);
     document.removeEventListener('keyup',   trOnKeyUp);
@@ -67,7 +69,23 @@ function stopTraining() {
     trPlayers.forEach(p => {
         if (p.shotBall) { p.shotBall.remove(); p.shotBall = null; p.shotState = null; }
     });
-    trStopLED();
+    // LED tiếp tục chạy – không gọi trStopLED()
+}
+
+// ── Background cycle ────────────────────────────────────
+function trInitBgCycle() {
+    if (trBgInterval) { clearInterval(trBgInterval); trBgInterval = null; }
+    const layers = document.querySelectorAll('.tr-bg-layer');
+    if (!layers.length) return;
+    let current = 0;
+    // Đảm bảo frame đầu đang active
+    layers.forEach((el, i) => el.classList.toggle('active', i === 0));
+    trBgInterval = setInterval(() => {
+        if (!trRunning) return;
+        layers[current].classList.remove('active');
+        current = (current + 1) % layers.length;
+        layers[current].classList.add('active');
+    }, 155); // đổi mỗi 0.2 giây
 }
 
 // ── LED banner ─────────────────────────────────────────
@@ -663,6 +681,7 @@ function initTraining() {
     trRunning = true;
 
     trInit();
+    trInitBgCycle();
     trInitLED();
     trScheduleIntruder();
 

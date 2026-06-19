@@ -37,13 +37,22 @@ html, body {
     isolation: isolate;  /* tạo stacking context riêng, LED z-index:-1 sẽ nằm sau background nhưng vẫn trong screen */
 }
 
-#tr-background {
+/* ── Background luân phiên ── */
+#tr-bg-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+.tr-bg-layer {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    opacity: 0;
+}
+.tr-bg-layer.active {
+    opacity: 1;
 }
 
 /* ── Player groups ── */
@@ -192,7 +201,7 @@ html, body {
     height: 88px;
     background: #000;
     overflow: hidden;
-    z-index: -1;       /* nằm sau tất cả, kể cả background */
+    z-index: -1;        /* nằm trên background, dưới nhân vật (z-index: 10) */
     border-top: 3px solid #111;
     border-bottom: 3px solid #111;
     display: flex;
@@ -250,11 +259,11 @@ html, body {
 }
 /* Thêm vào cuối file training.css */
 #tr-sprite-rocky {
-    width: 600px;   /* tăng từ 455px lên, chỉnh số này */
-    height: 600px;
+    width: 666px;   /* tăng từ 455px lên, chỉnh số này */
+    height: 666px;
 }
 
 #tr-sprite-keng {
-    width: 666x;   /* chỉnh nếu sprite keng cần size khác */
-    height: 666px;
+    width: 600px;   /* chỉnh nếu sprite keng cần size khác */
+    height: 600px;
 }
