@@ -250,6 +250,11 @@ html, body {
 }
 /* Thêm vào cuối file training.css */
 #tr-sprite-rocky {
-    width: 666px;   /* tăng từ 455px lên, chỉnh số này */
+    width: 600px;   /* tăng từ 455px lên, chỉnh số này */
+    height: 600px;
+}
+
+#tr-sprite-keng {
+    width: 666x;   /* chỉnh nếu sprite keng cần size khác */
     height: 666px;
 }

@@ -35,6 +35,8 @@ const TR_CHARACTERS = [
     { id:'lyron', idle: TR_IMG('2-lyron.png'),        run: TR_IMG('2-lyron-running.png'),  shoot: TR_IMG('2-lyron-shoot.png'), xoac: TR_IMG('2-lyron-xoac.png'), startDir: 1,  speed: 10 },
     { id:'rocky', idle: TR_IMG('rocky.png'),           run: TR_IMG('rocky1.png'),           shoot: TR_IMG('rocky-shoot.png'),   xoac: TR_IMG('rocky-xoac.png'),   startDir: 1,  speed: 9,
       runFrames: [TR_IMG('rocky1.png'), TR_IMG('rocky2.png'), TR_IMG('rocky3.png'), TR_IMG('rocky4.png')] },
+    { id:'keng',  idle: TR_IMG('keng.png'),            run: TR_IMG('keng1.png'),            shoot: TR_IMG('keng-sut.png'),      xoac: TR_IMG('keng-xoac.png'),    startDir: 1,  speed: 9,
+      runFrames: [TR_IMG('keng1.png'), TR_IMG('keng2.png')] },
 ];
 
 let trPlayers = [];
