@@ -30,13 +30,15 @@ const TR_Y_MAX = 220;
 const TR_VERTICAL_SPEED_FACTOR = 0.7;
 
 const TR_CHARACTERS = [
-    { id:'noxx',  idle: TR_IMG('2-noxx.png'),         run: TR_IMG('2-noxx-running.png'),  shoot: TR_IMG('2-noxx-shoot.png'),  xoac: TR_IMG('2-noxx-xoac.png'),  startDir: 1,  speed: 8  },
-    { id:'xeali', idle: TR_IMG('2-xeali.png'),        run: TR_IMG('2-xeali-running.png'), shoot: TR_IMG('2-xeali-shoot.png'), xoac: TR_IMG('2-xeali-xoac.png'), startDir: -1, speed: 6  },
-    { id:'lyron', idle: TR_IMG('2-lyron.png'),        run: TR_IMG('2-lyron-running.png'),  shoot: TR_IMG('2-lyron-shoot.png'), xoac: TR_IMG('2-lyron-xoac.png'), startDir: 1,  speed: 10 },
-    { id:'rocky', idle: TR_IMG('rocky.png'),           run: TR_IMG('rocky1.png'),           shoot: TR_IMG('rocky-shoot.png'),   xoac: TR_IMG('rocky-xoac.png'),   startDir: 1,  speed: 9,
+    { id:'noxx',  idle: TR_IMG('2-noxx.png'),         run: TR_IMG('2-noxx-running.png'),  shoot: TR_IMG('2-noxx-shoot.png'),  xoac: TR_IMG('2-noxx-xoac.png'),  startDir: 1,  speed: 8,  spriteMs: 350 },
+    { id:'xeali', idle: TR_IMG('2-xeali.png'),        run: TR_IMG('2-xeali-running.png'), shoot: TR_IMG('2-xeali-shoot.png'), xoac: TR_IMG('2-xeali-xoac.png'), startDir: -1, speed: 6,  spriteMs: 350 },
+    { id:'lyron', idle: TR_IMG('2-lyron.png'),        run: TR_IMG('2-lyron-running.png'),  shoot: TR_IMG('2-lyron-shoot.png'), xoac: TR_IMG('2-lyron-xoac.png'), startDir: 1,  speed: 10, spriteMs: 350 },
+    { id:'rocky', idle: TR_IMG('rocky.png'),           run: TR_IMG('rocky1.png'),           shoot: TR_IMG('rocky-shoot.png'),   xoac: TR_IMG('rocky-xoac.png'),   startDir: 1,  speed: 9,  spriteMs: 150,
       runFrames: [TR_IMG('rocky1.png'), TR_IMG('rocky2.png'), TR_IMG('rocky3.png'), TR_IMG('rocky4.png')] },
-    { id:'keng',  idle: TR_IMG('keng.png'),            run: TR_IMG('keng1.png'),            shoot: TR_IMG('keng-sut.png'),      xoac: TR_IMG('keng-xoac.png'),    startDir: 1,  speed: 9,
+    { id:'keng',  idle: TR_IMG('keng.png'),            run: TR_IMG('keng1.png'),            shoot: TR_IMG('keng-sut.png'),      xoac: TR_IMG('keng-xoac.png'),    startDir: 1,  speed: 9,  spriteMs: 350,
       runFrames: [TR_IMG('keng1.png'), TR_IMG('keng2.png')] },
+    { id:'spider', idle: TR_IMG('spider.png'),          run: TR_IMG('spider-1.png'),         shoot: TR_IMG('spider-shoot.png'),  xoac: TR_IMG('spider-xoac.png'),  startDir: 1,  speed: 19,  spriteMs: 88,
+      runFrames: [TR_IMG('spider-1.png'), TR_IMG('spider-2.png'), TR_IMG('spider-3.png'), TR_IMG('spider-4.png')] },
 ];
 
 let trPlayers = [];
@@ -529,6 +531,19 @@ function trUpdateVisibility() {
     });
 }
 
+
+// ══ Sprite interval restart (per-character speed) ════════════════════
+function trRestartSpriteInterval() {
+    if (trSpriteInterval) { clearInterval(trSpriteInterval); trSpriteInterval = null; }
+    const ms = trPlayers[trActiveIndex].cfg.spriteMs || TR_SPRITE_MS;
+    trSpriteInterval = setInterval(() => {
+        if (!trRunning) return;
+        const p = trPlayers[trActiveIndex];
+        if (trKeys.left || trKeys.right) { trFlipSprite(p); }
+        else if (!p.isShooting && !p.isXoac) { trSetSpritePose(p, p.cfg.idle, false); p.spriteFrame = 0; }
+    }, ms);
+}
+
 // ── Key handlers (training) ──────────────────────────────
 function trOnKeyDown(e) {
     if (!trRunning) return;
@@ -705,17 +720,12 @@ function initTraining() {
             trChargeStart = null;
             trHidePowerBar();
             trUpdateVisibility();
+            trRestartSpriteInterval();
         };
     });
 
-    // Sprite animation interval
-    if (trSpriteInterval) clearInterval(trSpriteInterval);
-    trSpriteInterval = setInterval(() => {
-        if (!trRunning) return;
-        const p = trPlayers[trActiveIndex];
-        if (trKeys.left || trKeys.right) { trFlipSprite(p); }
-        else if (!p.isShooting && !p.isXoac) { trSetSpritePose(p, p.cfg.idle, false); p.spriteFrame = 0; }
-    }, TR_SPRITE_MS);
+    // Sprite animation interval -- restart voi spriteMs rieng cua tung nhan vat
+    trRestartSpriteInterval();
 
     trLoopRAF = requestAnimationFrame(trLoop);
 

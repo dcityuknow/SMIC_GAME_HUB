@@ -267,3 +267,8 @@ html, body {
     width: 600px;   /* chỉnh nếu sprite keng cần size khác */
     height: 600px;
 }
+
+#tr-sprite-spider {
+    width: 455px;   /* chỉnh nếu sprite spider cần size khác */
+    height: 455px;
+}
