@@ -755,7 +755,7 @@ function showFlash(msg, cls) {
 function endGame() {
     removeKeyControls();
     let trophy, title;
-    if      (playerScore > botScore) { trophy = '🏆'; title = 'YOU WIN!'; }
+    if      (playerScore > botScore) { trophy = '🏆'; title = 'YOU WIN!'; if (typeof awardWin === 'function') awardWin(); }
     else if (playerScore < botScore) { trophy = '😞'; title = 'BOT WINS!'; }
     else                             { trophy = '🤝'; title = "IT'S A DRAW!"; }
     resultTrophy.textContent = trophy;
